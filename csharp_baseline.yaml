@@ -1,0 +1,136 @@
+# ==========================================================
+# Semgrep Ruleset for C# Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in C# code, including SQL Injection,
+#              XSS, Command Injection, Path Traversal, Weak Cryptography,
+#              and more. Suggested fixes included.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection
+    languages: [csharp]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+      Suggested Fix: Use parameterized queries (e.g., SqlParameter) to prevent SQL Injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $DB.ExecuteQuery("...'" + $USER_INPUT + "'...")
+      - pattern: |
+          $DB.ExecuteNonQuery("...'" + $USER_INPUT + "'...")
+      - pattern-not: |
+          $DB.ExecuteQuery("... @param ...", new SqlParameter("@param", $USER_INPUT))
+      - pattern-not: |
+          $DB.ExecuteNonQuery("... @param ...", new SqlParameter("@param", $USER_INPUT))
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-xss
+    languages: [csharp]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid inserting unsanitized user input into the output stream.
+      Suggested Fix: Use HtmlEncode or similar functions to sanitize user input before rendering it.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          Response.Write($USER_INPUT)
+      - pattern: |
+          HttpContext.Current.Response.Write($USER_INPUT)
+      - pattern-not: |
+          Response.Write(HtmlEncode($USER_INPUT))
+      - pattern-not: |
+          HttpContext.Current.Response.Write(HtmlEncode($USER_INPUT))
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-command-injection
+    languages: [csharp]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+      Suggested Fix: Sanitize user input and use predefined command arguments to prevent injection attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          System.Diagnostics.Process.Start($CMD, $USER_INPUT)
+      - pattern-not: |
+          System.Diagnostics.Process.Start($CMD, sanitize($USER_INPUT))
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-path-traversal
+    languages: [csharp]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+      Suggested Fix: Use Path.GetFullPath() or sanitize file paths to prevent unauthorized file access.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          System.IO.File.ReadAllText($USER_INPUT)
+      - pattern: |
+          System.IO.File.WriteAllText($USER_INPUT, ...)
+      - pattern: |
+          System.IO.Directory.CreateDirectory($USER_INPUT)
+      - pattern-not: |
+          System.IO.File.ReadAllText(Path.GetFullPath($USER_INPUT))
+      - pattern-not: |
+          System.IO.File.WriteAllText(Path.GetFullPath($USER_INPUT), ...)
+      - pattern-not: |
+          System.IO.Directory.CreateDirectory(Path.GetFullPath($USER_INPUT))
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization
+    languages: [csharp]
+    message: |
+      Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
+      Suggested Fix: Use safe serialization formats like JSON and validate inputs before deserializing.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          new BinaryFormatter().Deserialize($USER_INPUT)
+      - pattern-not: |
+          new BinaryFormatter().Deserialize(sanitize($USER_INPUT))
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-sensitive-data-exposure
+    languages: [csharp]
+    message: |
+      Sensitive data exposure. Avoid logging sensitive information.
+      Suggested Fix: Mask sensitive data (e.g., password, credit card numbers) before logging.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          Console.WriteLine($SENSITIVE_DATA)
+      - pattern: |
+          log4net.ILog.Debug($SENSITIVE_DATA)
+      - pattern-not: |
+          Console.WriteLine(maskSensitiveData($SENSITIVE_DATA))
+      - pattern-not: |
+          log4net.ILog.Debug(maskSensitiveData($SENSITIVE_DATA))
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-weak-cryptography
+    languages: [csharp]
+    message: |
+      Weak or deprecated cryptography algorithm detected. Using outdated cryptography can compromise security.
+      Suggested Fix: Use strong algorithms like AES with a proper key size (e.g., AES-256).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          new DESCryptoServiceProvider()
+      - pattern: |
+          new RC2CryptoServiceProvider()
+      - pattern-not: |
+          new AesCryptoServiceProvider()
+    metadata:
+      cwe: CWE-327
+      owasp: A6: Security Misconfiguration
