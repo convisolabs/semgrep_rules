@@ -1,0 +1,120 @@
+# ==========================================================
+# Semgrep Ruleset for HTML Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in HTML files, including insecure attributes, open redirects,
+#              and dangerous use of target="_blank".
+# ==========================================================
+
+rules:
+  - id: detect-unsafe-inline-event-handlers
+    languages: [html]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid using unsanitized user input in event handlers like `onload`, `onclick`, etc.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          <img src=$SRC onerror=$ERROR_FUNCTION>
+      - pattern: |
+          <button onclick=$USER_FUNCTION>
+    fix: |
+      Avoid including dynamic user input directly in event handler attributes, or sanitize the input. Example:
+      
+      ```html
+      <img src="$SRC" onerror="sanitize($ERROR_FUNCTION)">
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-unsafe-href-javascript
+    languages: [html]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability via `javascript:` in `href`. Avoid using `javascript:` URIs.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          <a href="javascript:$SCRIPT">
+    fix: |
+      Avoid using `javascript:` URIs in href attributes. Example:
+      
+      ```html
+      <a href="https://safe-url.com">Safe Link</a>
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-open-redirect-html
+    languages: [html]
+    message: |
+      Possible open redirect vulnerability. Avoid using untrusted data in URLs or redirects.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          <a href=$URL>
+      - pattern: |
+          <form action=$URL>
+    fix: |
+      Validate and sanitize URLs before using them in `href` or `action` attributes. Example:
+      
+      ```html
+      <a href="https://safe-url.com">Link</a>
+      ```
+    metadata:
+      cwe: CWE-601
+      owasp: A10: Unvalidated Redirects and Forwards
+
+  - id: detect-unsafe-target-blank
+    languages: [html]
+    message: |
+      Using `target="_blank"` without `rel="noopener noreferrer"` can lead to tabnabbing attacks.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          <a href=$URL target="_blank">
+    fix: |
+      Add `rel="noopener noreferrer"` to links with `target="_blank"`. Example:
+      
+      ```html
+      <a href="https://example.com" target="_blank" rel="noopener noreferrer">Safe Link</a>
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-exposed-hidden-inputs
+    languages: [html]
+    message: |
+      Hidden form inputs can expose sensitive information to attackers. Avoid storing sensitive data in hidden fields.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          <input type="hidden" name=$NAME value=$VALUE>
+    fix: |
+      Avoid storing sensitive information like user IDs or tokens in hidden fields. Use secure session handling instead. Example:
+      
+      ```html
+      <!-- Use backend validation to store user IDs -->
+      ```
+    metadata:
+      cwe: CWE-201
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-autocomplete
+    languages: [html]
+    message: |
+      Unsafe use of `autocomplete` for sensitive data. Disable `autocomplete` for inputs containing sensitive information.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          <input type="text" name=$NAME autocomplete="on">
+    fix: |
+      Disable `autocomplete` for sensitive information. Example:
+      
+      ```html
+      <input type="password" name="password" autocomplete="off">
+      ```
+    metadata:
+      cwe: CWE-522
+      owasp: A3: Sensitive Data Exposure
