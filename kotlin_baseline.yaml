@@ -1,0 +1,113 @@
+# ==========================================================
+# Semgrep Ruleset for Kotlin Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Kotlin applications, including SQL Injection, Insecure 
+#              SharedPreferences Usage, XSS, and Unsafe Intents.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-kotlin
+    languages: [kotlin]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.rawQuery("SELECT * FROM users WHERE name = '$USER_INPUT'", null)
+      - pattern: |
+          db.execSQL("INSERT INTO users (name) VALUES ('$USER_INPUT')")
+    fix: |
+      Use parameterized queries or `SQLiteDatabase.query` to avoid SQL Injection. Example:
+      
+      ```kotlin
+      val cursor = db.rawQuery("SELECT * FROM users WHERE name = ?", arrayOf(userInput))
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-insecure-shared-preferences-kotlin
+    languages: [kotlin]
+    message: |
+      Insecure usage of `SharedPreferences` detected. Avoid storing sensitive information in `SharedPreferences`.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          val editor = getSharedPreferences($PREFS_NAME, Context.MODE_PRIVATE).edit()
+          editor.putString("password", $PASSWORD)
+    fix: |
+      Avoid storing sensitive data like passwords in `SharedPreferences`. Instead, consider using a secure storage option like EncryptedSharedPreferences or the Android Keystore. Example:
+      
+      ```kotlin
+      val encryptedPrefs = EncryptedSharedPreferences.create(
+          $PREFS_NAME, 
+          masterKeyAlias, 
+          context, 
+          EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+          EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+      )
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-intent-kotlin
+    languages: [kotlin]
+    message: |
+      Insecure usage of `Intent` detected. Avoid passing sensitive information via `Intent` extras or using implicit Intents with sensitive data.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          intent.putExtra("password", $PASSWORD)
+      - pattern: |
+          val intent = Intent($ACTION)
+          startActivity(intent)
+    fix: |
+      Use encrypted data when passing sensitive information through `Intent` or prefer **`Bundle`** with encryption. Example:
+      
+      ```kotlin
+      val encryptedPassword = encrypt(password)
+      intent.putExtra("password", encryptedPassword)
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-xss-kotlin
+    languages: [kotlin]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid injecting unsanitized user input into web views.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          webView.loadData($USER_INPUT, "text/html", "UTF-8")
+      - pattern: |
+          webView.loadUrl($USER_URL)
+    fix: |
+      Sanitize user input before injecting it into web views or URLs to prevent XSS. Example:
+      
+      ```kotlin
+      webView.loadData(sanitizeInput(userInput), "text/html", "UTF-8")
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-unsafe-use-of-webview-kotlin
+    languages: [kotlin]
+    message: |
+      Insecure WebView usage detected. Ensure WebView security features like `setJavaScriptEnabled(false)` are set to prevent attacks.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          webView.settings.javaScriptEnabled = true
+    fix: |
+      Avoid enabling JavaScript in WebView unless absolutely necessary. If needed, ensure proper input sanitization and security features are enabled. Example:
+      
+      ```kotlin
+      webView.settings.javaScriptEnabled = false
+      ```
+    metadata:
+      cwe: CWE-937
+      owasp: A6: Security Misconfiguration
