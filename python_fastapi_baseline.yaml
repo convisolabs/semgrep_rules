@@ -1,0 +1,55 @@
+# ==========================================================
+# Semgrep Ruleset for FastAPI Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in FastAPI applications, including 
+#              Unvalidated Path Parameters and Missing Data Validation.
+# ==========================================================
+
+rules:
+  - id: detect-fastapi-unvalidated-path-params
+    languages: [python]
+    message: |
+      Path parameters in FastAPI should be validated. Ensure proper validation of user input.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          @app.get("/items/{item_id}")
+          def read_item(item_id):
+              return {"item_id": item_id}
+    fix: |
+      Use Pydantic models or validators in FastAPI to validate path parameters. Example:
+      
+      ```python
+      @app.get("/items/{item_id}")
+      def read_item(item_id: int):
+          return {"item_id": item_id}
+      ```
+    metadata:
+      cwe: CWE-20
+      owasp: A3: Injection
+
+  - id: detect-fastapi-missing-data-validation
+    languages: [python]
+    message: |
+      Missing or incomplete validation of data in FastAPI models. Ensure all fields are validated.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          class $Model(BaseModel):
+              $FIELD: str
+      - pattern-not: |
+          class $Model(BaseModel):
+              $FIELD: constr(min_length=1)
+    fix: |
+      Use Pydantic validators in FastAPI models to enforce data validation. Example:
+      
+      ```python
+      from pydantic import BaseModel, constr
+      
+      class MyModel(BaseModel):
+          name: constr(min_length=1)
+      ```
+    metadata:
+      cwe: CWE-20
+      owasp: A3: Injection
