@@ -1,0 +1,132 @@
+# ==========================================================
+# Semgrep Ruleset for C Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in C applications, including Buffer Overflow,
+#              Use After Free, Integer Overflow, and Command Injection.
+# ==========================================================
+
+rules:
+  - id: detect-buffer-overflow
+    languages: [c]
+    message: |
+      Potential Buffer Overflow detected. Avoid using unsafe functions such as `strcpy` or `sprintf` without proper bounds checking.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          strcpy($DST, $SRC);
+      - pattern: |
+          sprintf($BUF, $FMT, ...);
+    fix: |
+      Use safer alternatives like `strncpy` or `snprintf`, ensuring the buffer size is properly checked. Example:
+      
+      ```c
+      strncpy($DST, $SRC, sizeof($DST) - 1);
+      $DST[sizeof($DST) - 1] = '\0';
+      ```
+
+  - id: detect-use-after-free
+    languages: [c]
+    message: |
+      Potential Use After Free detected. Using memory after it has been freed can cause undefined behavior and vulnerabilities.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          free($PTR);
+          $VAR = *$PTR;
+    fix: |
+      Ensure the pointer is set to NULL after freeing the memory to avoid accidental use. Example:
+      
+      ```c
+      free($PTR);
+      $PTR = NULL;
+      ```
+
+  - id: detect-integer-overflow
+    languages: [c]
+    message: |
+      Possible Integer Overflow detected. Ensure proper checks are in place when performing arithmetic operations on integers.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $VAR = $X + $Y;
+      - pattern: |
+          $VAR = $X * $Y;
+    fix: |
+      Add checks to ensure that the result does not exceed the limits of the integer type. Example:
+      
+      ```c
+      if ($X > INT_MAX - $Y) {
+        // Handle overflow case
+      }
+      $VAR = $X + $Y;
+      ```
+
+  - id: detect-command-injection
+    languages: [c]
+    message: |
+      Potential Command Injection detected. Avoid using functions like `system` or `popen` with untrusted input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          system($CMD);
+      - pattern: |
+          popen($CMD, $MODE);
+    fix: |
+      Use safer alternatives and sanitize inputs before executing commands. Example:
+      
+      ```c
+      if (validate_input($CMD)) {
+        system($CMD);
+      }
+      ```
+
+  - id: detect-strncpy-misuse
+    languages: [c]
+    message: |
+      Possible misuse of `strncpy` detected. Ensure the destination buffer is properly null-terminated.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          strncpy($DST, $SRC, $SIZE);
+    fix: |
+      After using `strncpy`, explicitly add a null terminator to ensure the destination string is properly terminated. Example:
+      
+      ```c
+      strncpy($DST, $SRC, $SIZE - 1);
+      $DST[$SIZE - 1] = '\0';
+      ```
+
+  - id: detect-unsafe-pointer-arithmetic
+    languages: [c]
+    message: |
+      Unsafe pointer arithmetic detected. Ensure that pointer manipulation is done within the bounds of the allocated memory.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $PTR = $PTR + $OFFSET;
+    fix: |
+      Ensure that the pointer arithmetic does not go beyond the allocated buffer size. Example:
+      
+      ```c
+      if ($PTR + $OFFSET < $BUF_END) {
+        $PTR = $PTR + $OFFSET;
+      }
+      ```
+
+  - id: detect-memory-leak
+    languages: [c]
+    message: |
+      Possible memory leak detected. Ensure that allocated memory is freed before the function returns or at the end of its lifecycle.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $PTR = malloc($SIZE);
+          return $RESULT;
+    fix: |
+      Free allocated memory before returning or exiting the function. Example:
+      
+      ```c
+      free($PTR);
+      return $RESULT;
+      ```
