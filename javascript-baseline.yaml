@@ -2,49 +2,125 @@
 # Semgrep Ruleset for JavaScript Security
 # Created by: Conviso
 # Description: This ruleset is designed to detect common
-#              vulnerabilities in JavaScript code, including
-#              XSS, SQL Injection, Path Traversal, and more.
+#              vulnerabilities in JavaScript applications, including 
+#              XSS, Insecure eval, Insecure DOM Manipulation, and 
+#              Local Storage Misuse.
 # ==========================================================
 
 rules:
-  - id: detect-xss
+  - id: detect-xss-javascript
     languages: [javascript]
     message: |
-      Possible Cross-Site Scripting (XSS) vulnerability. Avoid inserting unsanitized user input into the DOM.
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid using unsanitized user input in HTML content.
     severity: ERROR
     patterns:
       - pattern: |
-          document.innerHTML = $USER_INPUT
-      - pattern-not: |
-          document.innerHTML = sanitize($USER_INPUT)
+          document.write($USER_INPUT)
+      - pattern: |
+          innerHTML = $USER_INPUT
+      - pattern: |
+          .innerHTML = $USER_INPUT
+    fix: |
+      Sanitize user input before inserting it into the DOM using libraries like DOMPurify. Example:
+      
+      ```javascript
+      element.innerHTML = DOMPurify.sanitize($USER_INPUT)
+      ```
     metadata:
       cwe: CWE-79
       owasp: A7: Cross-Site Scripting (XSS)
 
-  - id: detect-sql-injection
+  - id: detect-insecure-eval-javascript
     languages: [javascript]
     message: |
-      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+      Unsafe use of `eval` detected. Avoid using `eval` with dynamic input as it can lead to code injection.
     severity: ERROR
     patterns:
       - pattern: |
-          connection.query(`SELECT * FROM users WHERE username = '${$USER_INPUT}'`)
-      - pattern-not: |
-          connection.query(`SELECT * FROM users WHERE username = ?`, [$USER_INPUT])
+          eval($USER_INPUT)
+    fix: |
+      Avoid using `eval` with dynamic input, or consider safer alternatives such as `JSON.parse()` or `Function()`. Example:
+      
+      ```javascript
+      const safeData = JSON.parse($USER_INPUT);
+      ```
     metadata:
-      cwe: CWE-89
+      cwe: CWE-94
       owasp: A1: Injection
 
-  - id: detect-path-traversal
+  - id: detect-insecure-dom-manipulation
     languages: [javascript]
     message: |
-      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+      Insecure DOM manipulation detected. Avoid manipulating DOM elements with unsanitized user input.
     severity: ERROR
     patterns:
       - pattern: |
-          fs.readFileSync($USER_INPUT)
-      - pattern-not: |
-          fs.readFileSync(path.resolve($USER_INPUT))
+          document.getElementById($ELEMENT_ID).innerHTML = $USER_INPUT
+      - pattern: |
+          document.createElement($USER_INPUT)
+    fix: |
+      Sanitize user input before inserting it into the DOM. Example:
+      
+      ```javascript
+      const sanitizedInput = DOMPurify.sanitize($USER_INPUT);
+      document.getElementById($ELEMENT_ID).innerHTML = sanitizedInput;
+      ```
     metadata:
-      cwe: CWE-22
-      owasp: A5: Broken Access Control
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-local-storage-misuse
+    languages: [javascript]
+    message: |
+      Possible sensitive data stored in Local Storage. Avoid storing sensitive information like passwords in Local Storage.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          localStorage.setItem("password", $PASSWORD)
+    fix: |
+      Avoid storing sensitive data like passwords in Local Storage, or use encryption before storing. Example:
+      
+      ```javascript
+      const encryptedPassword = encrypt($PASSWORD);
+      localStorage.setItem("password", encryptedPassword);
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-use-of-innerhtml
+    languages: [javascript]
+    message: |
+      Unsafe use of `innerHTML` detected. Avoid assigning unsanitized user input to `innerHTML` to prevent XSS attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          .innerHTML = $USER_INPUT
+    fix: |
+      Sanitize user input before inserting it into `innerHTML` using libraries like DOMPurify. Example:
+      
+      ```javascript
+      element.innerHTML = DOMPurify.sanitize($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-cookie-usage
+    languages: [javascript]
+    message: |
+      Insecure cookie usage detected. Avoid storing sensitive data in cookies without proper flags like `HttpOnly` and `Secure`.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          document.cookie = $COOKIE
+    fix: |
+      Ensure cookies are set with the `HttpOnly` and `Secure` flags when handling sensitive information. Example:
+      
+      ```javascript
+      document.cookie = "sessionToken=" + token + "; Secure; HttpOnly";
+      ```
+    metadata:
+      cwe: CWE-1004
+      owasp: A3: Sensitive Data Exposure
+
