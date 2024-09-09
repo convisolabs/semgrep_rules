@@ -1,0 +1,117 @@
+# ==========================================================
+# Semgrep Ruleset for Vue.js Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Vue.js applications, including XSS, Insecure eval,
+#              Insecure DOM Manipulation, and Unsafe Template Usage.
+# ==========================================================
+
+rules:
+  - id: detect-xss-vue
+    languages: [javascript, typescript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability in Vue.js. Avoid using unsanitized user input in templates or `v-html`.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          v-html="$USER_INPUT"
+    fix: |
+      Avoid using `v-html` with unsanitized input, or sanitize the input before rendering. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      <div v-html="DOMPurify.sanitize($USER_INPUT)" />
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-eval-vue
+    languages: [javascript, typescript]
+    message: |
+      Unsafe use of `eval` detected in Vue.js components. Avoid using `eval` with dynamic input as it can lead to code injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          eval($USER_INPUT)
+    fix: |
+      Avoid using `eval` or find safer alternatives such as `JSON.parse()`. Example:
+      
+      ```javascript
+      const safeData = JSON.parse($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
+
+  - id: detect-insecure-dom-manipulation-vue
+    languages: [javascript, typescript]
+    message: |
+      Insecure DOM manipulation detected in Vue.js. Avoid directly manipulating the DOM with unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          document.getElementById($ELEMENT_ID).innerHTML = $USER_INPUT
+    fix: |
+      Use Vue.js templates and data binding to manage the DOM securely. Example:
+      
+      ```javascript
+      <div v-html="DOMPurify.sanitize($USER_INPUT)" />
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-unsafe-local-storage-vue
+    languages: [javascript, typescript]
+    message: |
+      Avoid storing sensitive data like passwords or tokens in Local Storage, which can be accessed by JavaScript.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          localStorage.setItem("token", $USER_INPUT)
+    fix: |
+      Avoid storing sensitive data in Local Storage. Instead, store tokens in cookies with `HttpOnly` and `Secure` flags. Example:
+      
+      ```javascript
+      document.cookie = "token=" + token + "; Secure; HttpOnly";
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-vue-v-bind-vulnerability
+    languages: [javascript, typescript]
+    message: |
+      Insecure use of `v-bind` detected in Vue.js. Avoid binding attributes directly to user input without proper sanitization.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          v-bind:src="$USER_INPUT"
+    fix: |
+      Ensure the input used in `v-bind` is properly sanitized. Example:
+      
+      ```javascript
+      <img v-bind:src="DOMPurify.sanitize($USER_INPUT)" />
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-unsafe-use-of-vue-directives
+    languages: [javascript, typescript]
+    message: |
+      Insecure use of Vue.js directives such as `v-on` with user input can lead to code injection. Ensure proper validation and sanitization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          v-on:click="$USER_FUNCTION"
+    fix: |
+      Avoid dynamically binding methods with unsanitized input or use proper validation. Example:
+      
+      ```javascript
+      v-on:click="validateAndExecute($USER_FUNCTION)"
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
