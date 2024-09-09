@@ -1,0 +1,143 @@
+# ==========================================================
+# Semgrep Ruleset for Angular Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Angular applications, including XSS, Insecure HTTP Requests, 
+#              Insecure DOM Manipulation, and Hardcoded Secrets.
+# ==========================================================
+
+rules:
+  - id: detect-xss-angular
+    languages: [typescript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability detected. Avoid using unsanitized user input in Angular templates or directly in the DOM.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          <div [innerHTML]="$USER_INPUT"></div>
+      - pattern: |
+          [innerHTML]="$USER_INPUT"
+    fix: |
+      Use Angular's **DomSanitizer** service to sanitize the user input before rendering. Example:
+      
+      ```typescript
+      this.sanitizedContent = this.sanitizer.bypassSecurityTrustHtml($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-http-request-angular
+    languages: [typescript]
+    message: |
+      Insecure HTTP request detected. Avoid making HTTP requests without SSL/TLS encryption or proper error handling.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          this.http.get($URL)
+    fix: |
+      Ensure all HTTP requests are made over HTTPS and handle errors properly. Example:
+      
+      ```typescript
+      this.http.get('https://secure-api.com')
+        .subscribe(response => { }, error => {
+          console.error('Error:', error);
+        });
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-hardcoded-secrets-angular
+    languages: [typescript]
+    message: |
+      Hardcoded secrets detected. Avoid storing sensitive information like API keys or passwords directly in Angular code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          const apiKey = "$API_KEY";
+      - pattern: |
+          const password = "$PASSWORD";
+    fix: |
+      Use environment variables or secret management services to store sensitive information. Example:
+      
+      ```typescript
+      const apiKey = environment.apiKey;
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-dom-manipulation-angular
+    languages: [typescript]
+    message: |
+      Insecure DOM manipulation detected in Angular. Avoid directly manipulating the DOM with unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          document.getElementById($ELEMENT_ID).innerHTML = $USER_INPUT
+    fix: |
+      Use Angular's **Renderer2** or **Sanitizer** services to safely manipulate the DOM. Example:
+      
+      ```typescript
+      this.renderer.setProperty(this.elementRef.nativeElement, 'innerHTML', this.sanitizer.bypassSecurityTrustHtml($USER_INPUT));
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-use-of-local-storage-angular
+    languages: [typescript]
+    message: |
+      Avoid storing sensitive information like passwords or tokens in Local Storage, which can be accessed by JavaScript.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          localStorage.setItem('token', $USER_INPUT)
+    fix: |
+      Use cookies with the **HttpOnly** and **Secure** flags to store sensitive information. Example:
+      
+      ```typescript
+      document.cookie = 'token=' + $USER_INPUT + '; Secure; HttpOnly';
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-use-of-eval-angular
+    languages: [typescript]
+    message: |
+      Unsafe use of `eval` detected. Avoid using `eval` with user-controlled input as it can lead to code injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          eval($USER_INPUT)
+    fix: |
+      Avoid using `eval` or use safer alternatives such as **JSON.parse()** for processing user input. Example:
+      
+      ```typescript
+      const safeData = JSON.parse($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
+
+  - id: detect-insecure-jwt-signing-angular
+    languages: [typescript]
+    message: |
+      Insecure JWT signing detected. Avoid using weak signing algorithms such as `none` or `HS256` without proper key management.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          jwt.sign($PAYLOAD, $SECRET, { algorithm: 'HS256' })
+      - pattern-not: |
+          jwt.sign($PAYLOAD, $SECRET, { algorithm: 'RS256' })
+    fix: |
+      Use stronger algorithms like **RS256** for signing JWTs and ensure key management practices are in place. Example:
+      
+      ```typescript
+      jwt.sign($PAYLOAD, $SECRET, { algorithm: 'RS256' });
+      ```
+    metadata:
+      cwe: CWE-347
+      owasp: A2: Broken Authentication
