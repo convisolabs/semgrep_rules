@@ -1,0 +1,110 @@
+# ==========================================================
+# Semgrep Ruleset for Spring Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Spring and Spring Boot applications, 
+#              including SpEL Injection, CSRF Protection, Open Redirects, 
+#              Insecure @RequestParam handling, and Actuator Exposure.
+# ==========================================================
+
+rules:
+  - id: detect-spel-injection
+    languages: [java]
+    message: |
+      Possible SpEL Injection. Avoid using unsanitized user input in SpEL expressions.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $parser.parseExpression($USER_INPUT)
+    fix: |
+      Sanitize or validate user input before using it in SpEL expressions. Example:
+      
+      ```java
+      // Sanitize or validate input
+      Expression exp = parser.parseExpression(sanitize($USER_INPUT));
+      ```
+    metadata:
+      cwe: CWE-917
+      owasp: A1: Injection
+
+  - id: detect-csrf-disabled
+    languages: [java]
+    message: |
+      CSRF protection is disabled in Spring Security. This can lead to Cross-Site Request Forgery (CSRF) attacks.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          http.csrf().disable();
+    fix: |
+      Ensure CSRF protection is enabled, or justify its disablement with proper reasoning. Example:
+      
+      ```java
+      http.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: CSRF
+
+  - id: detect-open-redirect
+    languages: [java]
+    message: |
+      Possible Open Redirect vulnerability. Avoid using unsanitized user input in redirects.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return "redirect:" + $USER_INPUT;
+    fix: |
+      Validate or restrict allowed redirect URLs. Example:
+      
+      ```java
+      if (isValidRedirect(redirectUrl)) {
+          return "redirect:" + redirectUrl;
+      }
+      ```
+    metadata:
+      cwe: CWE-601
+      owasp: A10: Unvalidated Redirects and Forwards
+
+  - id: detect-insecure-request-param
+    languages: [java]
+    message: |
+      Insecure handling of @RequestParam detected. Ensure user input is validated before usage.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          @RequestParam($USER_INPUT)
+    fix: |
+      Validate or sanitize user input from @RequestParam before using it in business logic. Example:
+      
+      ```java
+      @RequestParam("query") String sanitizedQuery = sanitize(query);
+      ```
+    metadata:
+      cwe: CWE-20
+      owasp: A3: Injection
+
+  - id: detect-actuator-exposure
+    languages: [yaml]
+    message: |
+      All Spring Boot Actuator endpoints are exposed. Restrict exposure to only necessary endpoints.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          management:
+            endpoints:
+              web:
+                exposure:
+                  include: "*"
+    fix: |
+      Restrict exposed endpoints in production to minimize attack surface. Example:
+      
+      ```yaml
+      management:
+        endpoints:
+          web:
+            exposure:
+              include: "health,info"
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A6: Security Misconfiguration
