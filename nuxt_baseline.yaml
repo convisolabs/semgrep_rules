@@ -1,0 +1,138 @@
+# ==========================================================
+# Semgrep Ruleset for Nuxt.js Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Nuxt.js applications, including SSR Injections, XSS, 
+#              API Misconfigurations, and Exposure of Sensitive Data.
+# ==========================================================
+
+rules:
+  - id: detect-ssr-injection-nuxt
+    languages: [javascript, typescript]
+    message: |
+      Possible SSR Injection vulnerability detected. Avoid using unsanitized user input in server-side rendering.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          asyncData({ query }) { return { content: query.content } }
+    fix: |
+      Sanitize the user input before rendering it on the server. Use libraries like **DOMPurify** to sanitize the content. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      asyncData({ query }) {
+        return { content: DOMPurify.sanitize(query.content) };
+      }
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-xss-v-html-nuxt
+    languages: [javascript, typescript]
+    message: |
+      Cross-Site Scripting (XSS) vulnerability detected. Avoid using `v-html` with unsanitized input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          <div v-html="$USER_INPUT"></div>
+    fix: |
+      Avoid using `v-html` for rendering user input. Use data binding instead to render content safely. Example:
+      
+      ```javascript
+      <div>{{ content }}</div>
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-api-routes-nuxt
+    languages: [javascript, typescript]
+    message: |
+      Insecure API route detected. Ensure that sensitive data or actions are protected with proper authentication and authorization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          export default function (req, res, next) { res.json({ secretData: 'Sensitive data' }) }
+    fix: |
+      Implement proper authentication and authorization checks before exposing sensitive data or performing actions. Example:
+      
+      ```javascript
+      export default function (req, res, next) {
+        if (!req.headers.authorization) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        res.json({ secretData: 'Sensitive data' });
+      }
+      ```
+    metadata:
+      cwe: CWE-284
+      owasp: A5: Broken Access Control
+
+  - id: detect-exposure-of-sensitive-env-vars-nuxt
+    languages: [javascript, typescript]
+    message: |
+      Sensitive environment variable exposed. Ensure that sensitive data is not exposed in the frontend by prefixing public variables with `NUXT_ENV_`.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          process.env.$SECRET
+    fix: |
+      Ensure that only public environment variables are exposed in the frontend, and sensitive environment variables are accessed only on the server side. Example:
+      
+      ```javascript
+      // Frontend variables should start with NUXT_ENV_
+      const apiUrl = process.env.NUXT_ENV_API_URL;
+
+      // Sensitive variables should only be used on the server side
+      const secretKey = process.env.SECRET_API_KEY;
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-file-handling-nuxt
+    languages: [javascript, typescript]
+    message: |
+      Insecure file handling detected. Avoid using unsanitized user input in file paths to prevent path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          res.sendFile(req.query.filePath)
+    fix: |
+      Use **path** library to sanitize and normalize file paths, ensuring that user input cannot manipulate file access paths. Example:
+      
+      ```javascript
+      import path from 'path';
+      const safePath = path.join(__dirname, 'public', path.normalize(req.query.filePath));
+      res.sendFile(safePath);
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-missing-csrf-protection-nuxt
+    languages: [javascript, typescript]
+    message: |
+      CSRF protection is missing for API routes that modify state. Implement CSRF protection to prevent unauthorized actions on behalf of users.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          app.post($ENDPOINT, $MIDDLEWARE)
+      - pattern-not: |
+          csrf({ cookie: true })
+    fix: |
+      Use the `csurf` middleware to add CSRF protection to your API routes. Example:
+      
+      ```javascript
+      import csrf from 'csurf';
+      const csrfProtection = csrf({ cookie: true });
+
+      export default async function handler(req, res) {
+        await csrfProtection(req, res);
+        // Process the request securely
+      }
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: Cross-Site Request Forgery (CSRF)
