@@ -1,0 +1,126 @@
+# ==========================================================
+# Semgrep Ruleset for Rust Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Rust applications, including Insecure Data Handling, 
+#              Insecure File Operations, Hardcoded Secrets, and Memory Safety.
+# ==========================================================
+
+rules:
+  - id: detect-insecure-file-operations-rust
+    languages: [rust]
+    message: |
+      Insecure file operation detected. Avoid using unsanitized user input in file paths, which can lead to path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          std::fs::read_to_string($USER_INPUT)
+      - pattern: |
+          std::fs::write($USER_INPUT, $DATA)
+    fix: |
+      Use a safe function or sanitize file paths before performing file operations to avoid path traversal. Example:
+      
+      ```rust
+      let safe_path = sanitize($USER_INPUT);
+      let contents = std::fs::read_to_string(safe_path)?;
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-hardcoded-secrets-rust
+    languages: [rust]
+    message: |
+      Hardcoded secrets detected. Avoid storing sensitive information like API keys or passwords directly in the source code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          const API_KEY: &str = "$API_KEY";
+      - pattern: |
+          const PASSWORD: &str = "$PASSWORD";
+    fix: |
+      Store sensitive information in environment variables or secret management tools instead of hardcoding them. Example:
+      
+      ```rust
+      let api_key = std::env::var("API_KEY").expect("API_KEY not set");
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-use-of-unsafe-blocks-rust
+    languages: [rust]
+    message: |
+      Use of `unsafe` block detected. Be cautious when using `unsafe` blocks as they can introduce memory safety issues.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          unsafe { $BODY }
+    fix: |
+      Ensure that the use of `unsafe` is necessary and that all potential memory safety issues are carefully handled. Example:
+      
+      ```rust
+      // Only use unsafe when absolutely necessary, ensuring safety is maintained.
+      ```
+    metadata:
+      cwe: CWE-119
+      owasp: A9: Using Components with Known Vulnerabilities
+
+  - id: detect-insecure-serialization-rust
+    languages: [rust]
+    message: |
+      Insecure serialization detected. Avoid serializing or deserializing untrusted data without validation.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          serde_json::from_str($USER_INPUT)
+      - pattern: |
+          bincode::deserialize($USER_INPUT)
+    fix: |
+      Ensure that the data being serialized/deserialized is trusted and properly validated to avoid potential deserialization vulnerabilities. Example:
+      
+      ```rust
+      let validated_input = validate($USER_INPUT)?;
+      let data: MyStruct = serde_json::from_str(validated_input)?;
+      ```
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-insecure-random-number-generation-rust
+    languages: [rust]
+    message: |
+      Insecure random number generation detected. Avoid using `rand::random()` for cryptographic purposes.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          rand::random::<$TYPE>()
+    fix: |
+      Use cryptographic random number generators like `rand::rngs::OsRng` for secure random number generation. Example:
+      
+      ```rust
+      use rand::RngCore;
+      let mut rng = rand::rngs::OsRng;
+      let random_value = rng.next_u64();
+      ```
+    metadata:
+      cwe: CWE-330
+      owasp: A9: Using Components with Known Vulnerabilities
+
+  - id: detect-unsafe-use-of-external-libraries-rust
+    languages: [rust]
+    message: |
+      Unsafe use of external libraries detected. Ensure that external crates are up-to-date and free from known vulnerabilities.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          use $EXTERNAL_CRATE::*;
+    fix: |
+      Regularly check for updates or vulnerabilities in external crates and ensure the use of well-maintained and secure libraries. Example:
+      
+      ```rust
+      cargo audit
+      ```
+    metadata:
+      cwe: CWE-829
+      owasp: A9: Using Components with Known Vulnerabilities
