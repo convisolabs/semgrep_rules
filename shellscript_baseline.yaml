@@ -1,0 +1,127 @@
+# ==========================================================
+# Semgrep Ruleset for Shell Script Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Shell scripts, including Command Injection,
+#              Path Traversal, and Insecure File Permissions.
+# ==========================================================
+
+rules:
+  - id: detect-command-injection-shell
+    languages: [bash, sh]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $(echo $USER_INPUT)
+      - pattern: |
+          `echo $USER_INPUT`
+      - pattern: |
+          exec $USER_INPUT
+    fix: |
+      Validate or sanitize input before passing it to commands or use `$(...)` safely. Example:
+      
+      ```bash
+      safe_input=$(echo "$USER_INPUT" | sed 's/[^a-zA-Z0-9]//g')
+      ```
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-unsafe-file-permissions
+    languages: [bash, sh]
+    message: |
+      Insecure file permissions detected. Avoid using broad permissions like 777.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          chmod 777 $FILE_PATH
+    fix: |
+      Use restrictive file permissions instead of 777. Example:
+      
+      ```bash
+      chmod 750 $FILE_PATH
+      ```
+    metadata:
+      cwe: CWE-732
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-path-traversal-shell
+    languages: [bash, sh]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          cat $USER_INPUT
+      - pattern: |
+          rm -rf $USER_INPUT
+    fix: |
+      Sanitize file paths to avoid path traversal attacks. Example:
+      
+      ```bash
+      safe_path=$(realpath "$USER_INPUT")
+      cat "$safe_path"
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-hardcoded-credentials
+    languages: [bash, sh]
+    message: |
+      Hardcoded credentials detected. Avoid storing sensitive information directly in scripts.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          PASSWORD="mypassword"
+      - pattern: |
+          ACCESS_KEY="AKIA..."
+    fix: |
+      Use environment variables or a secrets management tool to store sensitive data. Example:
+      
+      ```bash
+      PASSWORD="$ENV_PASSWORD"
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-use-of-eval
+    languages: [bash, sh]
+    message: |
+      Unsafe use of `eval` detected. Avoid using eval with unsanitized input as it can lead to code injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          eval $USER_INPUT
+    fix: |
+      Avoid using `eval` with dynamic input or sanitize input before passing to `eval`. Example:
+      
+      ```bash
+      safe_input=$(echo "$USER_INPUT" | sed 's/[^a-zA-Z0-9]//g')
+      eval "$safe_input"
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
+
+  - id: detect-unsafe-use-of-sudo
+    languages: [bash, sh]
+    message: |
+      Unsafe use of `sudo` detected. Avoid using `sudo` without validating user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          sudo $USER_INPUT
+    fix: |
+      Validate user input before using it with `sudo`. Example:
+      
+      ```bash
+      safe_input=$(echo "$USER_INPUT" | sed 's/[^a-zA-Z0-9]//g')
+      sudo "$safe_input"
+      ```
+    metadata:
+      cwe: CWE-77
+      owasp: A1: Injection
