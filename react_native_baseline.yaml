@@ -1,0 +1,124 @@
+# ==========================================================
+# Semgrep Ruleset for React Native Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in React Native applications, including Insecure Data 
+#              Storage, Insecure Permissions Handling, and Network Security.
+# ==========================================================
+
+rules:
+  - id: detect-insecure-asyncstorage-react-native
+    languages: [javascript, typescript]
+    message: |
+      Insecure usage of `AsyncStorage` detected. Avoid storing sensitive information like passwords or tokens in AsyncStorage.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          AsyncStorage.setItem("password", $PASSWORD)
+    fix: |
+      Use **SecureStore** or similar libraries to store sensitive data securely. Example:
+      
+      ```javascript
+      import * as SecureStore from 'expo-secure-store';
+      await SecureStore.setItemAsync("password", $PASSWORD);
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-permissions-react-native
+    languages: [javascript, typescript]
+    message: |
+      Insecure permission handling detected. Ensure that permissions are handled properly and avoid requesting unnecessary permissions.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          PermissionsAndroid.request($PERMISSION)
+    fix: |
+      Request only the necessary permissions and ensure that the app handles permissions correctly. Example:
+      
+      ```javascript
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: "Camera Permission",
+          message: "App needs access to your camera.",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK",
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the camera");
+      } else {
+        console.log("Camera permission denied");
+      }
+      ```
+    metadata:
+      cwe: CWE-284
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-http-react-native
+    languages: [javascript, typescript]
+    message: |
+      Insecure network request detected. Avoid making HTTP requests without SSL/TLS encryption.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          fetch($URL)
+    fix: |
+      Use HTTPS for all network requests and handle errors properly. Example:
+      
+      ```javascript
+      fetch('https://secure-api.com')
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-webview-react-native
+    languages: [javascript, typescript]
+    message: |
+      Insecure usage of `WebView` detected in React Native. Avoid enabling JavaScript or loading untrusted URLs without sanitization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          <WebView
+            javaScriptEnabled={true}
+            source={{ uri: $URL }}
+          />
+    fix: |
+      Avoid enabling JavaScript in `WebView` or sanitize URLs before loading. Example:
+      
+      ```javascript
+      <WebView
+        javaScriptEnabled={false}
+        source={{ uri: sanitizeUrl($URL) }}
+      />
+      ```
+    metadata:
+      cwe: CWE-937
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-insecure-native-module-react-native
+    languages: [javascript, typescript]
+    message: |
+      Insecure native module usage detected. Ensure that native modules are secure and do not expose sensitive information.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          NativeModules.$MODULE_NAME.$METHOD()
+    fix: |
+      Ensure that native modules are secure, validate input, and handle errors properly. Example:
+      
+      ```javascript
+      NativeModules.CameraModule.capturePhoto()
+        .then(photo => console.log(photo))
+        .catch(error => console.error('Error:', error));
+      ```
+    metadata:
+      cwe: CWE-284
+      owasp: A5: Broken Access Control
