@@ -1,0 +1,144 @@
+# ==========================================================
+# Semgrep Ruleset for Lua Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Lua applications, including Command Injection,
+#              Global Variable Manipulation, Insecure File Handling,
+#              and Insecure Use of `loadstring`.
+# ==========================================================
+
+rules:
+  - id: detect-command-injection
+    languages: [lua]
+    message: |
+      Potential Command Injection detected. Avoid using `os.execute` or `io.popen` with untrusted input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          os.execute($CMD)
+      - pattern: |
+          io.popen($CMD, $MODE)
+    fix: |
+      Validate and sanitize any user input before using it in system commands. Example:
+      
+      ```lua
+      if validate_input($CMD) then
+        os.execute($CMD)
+      end
+      ```
+
+  - id: detect-global-variable-manipulation
+    languages: [lua]
+    message: |
+      Potential Global Variable Manipulation detected. Avoid using global variables as they can lead to unexpected behavior and security issues.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $VAR = $VALUE
+      - metavariable-regex:
+          $VAR: "[A-Z_][A-Z0-9_]*"
+    fix: |
+      Use local variables instead of global variables to avoid potential conflicts. Example:
+      
+      ```lua
+      local $VAR = $VALUE
+      ```
+
+  - id: detect-insecure-file-handling
+    languages: [lua]
+    message: |
+      Insecure File Handling detected. Ensure that user input is properly sanitized before using it in file operations like `io.open`.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          io.open($FILENAME, $MODE)
+    fix: |
+      Ensure that the filename is sanitized to avoid file path manipulation or traversal attacks. Example:
+      
+      ```lua
+      local safe_filename = sanitize_filename($FILENAME)
+      io.open(safe_filename, $MODE)
+      ```
+
+  - id: detect-loadstring-usage
+    languages: [lua]
+    message: |
+      Insecure use of `loadstring` detected. Avoid using `loadstring` with dynamic user input as it can lead to code injection vulnerabilities.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          loadstring($CODE)
+    fix: |
+      Avoid using `loadstring` to execute dynamic code. If necessary, ensure that the input is thoroughly validated and sanitized. Example:
+      
+      ```lua
+      if validate_code($CODE) then
+        loadstring($CODE)
+      end
+      ```
+
+  - id: detect-insecure-require
+    languages: [lua]
+    message: |
+      Potentially insecure use of `require` detected. Avoid using dynamic module names from untrusted sources in the `require` function.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          require($MODULE)
+    fix: |
+      Ensure that the module name is validated and not dynamically constructed from user input. Example:
+      
+      ```lua
+      if is_trusted_module($MODULE) then
+        require($MODULE)
+      end
+      ```
+
+  - id: detect-unsafe-string-format
+    languages: [lua]
+    message: |
+      Potentially unsafe use of `string.format` detected. Avoid using untrusted input in string formatting as it may lead to vulnerabilities.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          string.format($FMT, $ARGS)
+    fix: |
+      Ensure that inputs used in `string.format` are properly validated and sanitized. Example:
+      
+      ```lua
+      local safe_args = sanitize($ARGS)
+      string.format($FMT, safe_args)
+      ```
+
+  - id: detect-insecure-dofile
+    languages: [lua]
+    message: |
+      Insecure use of `dofile` detected. Avoid using untrusted input in `dofile` as it can lead to file inclusion vulnerabilities.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          dofile($FILENAME)
+    fix: |
+      Avoid using `dofile` with untrusted filenames. Ensure that any file to be included is properly validated. Example:
+      
+      ```lua
+      if is_safe_file($FILENAME) then
+        dofile($FILENAME)
+      end
+      ```
+
+  - id: detect-unsafe-os-remove
+    languages: [lua]
+    message: |
+      Insecure use of `os.remove` detected. Ensure that file paths are validated before passing them to `os.remove` to avoid unintended deletions.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          os.remove($FILENAME)
+    fix: |
+      Validate the file path before deleting the file. Example:
+      
+      ```lua
+      local safe_filename = sanitize_filename($FILENAME)
+      os.remove(safe_filename)
+      ```
