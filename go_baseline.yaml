@@ -1,0 +1,181 @@
+# ==========================================================
+# Semgrep Ruleset for Go and Go Frameworks Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Go applications, including Go frameworks 
+#              like Gin, Echo, and Fiber, covering SQL Injection, 
+#              Command Injection, and Path Traversal.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-go
+    languages: [go]
+    message: |
+      Possible SQL Injection vulnerability in Go SQL query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.Query("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'")
+      - pattern: |
+          db.Exec("INSERT INTO users (name) VALUES ('" + $USER_INPUT + "')")
+    fix: |
+      Use parameterized queries or prepared statements to avoid SQL Injection. Example:
+      
+      ```go
+      db.Query("SELECT * FROM users WHERE name = ?", $USER_INPUT)
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-gin
+    languages: [go]
+    message: |
+      Possible SQL Injection vulnerability in Gin framework query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.Query("SELECT * FROM users WHERE name = '" + c.Param("name") + "'")
+    fix: |
+      Use Gin's parameter handling with queries. Example:
+      
+      ```go
+      db.Query("SELECT * FROM users WHERE name = ?", c.Param("name"))
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-echo
+    languages: [go]
+    message: |
+      Possible SQL Injection vulnerability in Echo framework query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.Query("SELECT * FROM users WHERE name = '" + c.Param("name") + "'")
+    fix: |
+      Use Echo's parameter handling with queries. Example:
+      
+      ```go
+      db.Query("SELECT * FROM users WHERE name = ?", c.Param("name"))
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-fiber
+    languages: [go]
+    message: |
+      Possible SQL Injection vulnerability in Fiber framework query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.Query("SELECT * FROM users WHERE name = '" + c.Params("name") + "'")
+    fix: |
+      Use Fiber's parameter handling with queries. Example:
+      
+      ```go
+      db.Query("SELECT * FROM users WHERE name = ?", c.Params("name"))
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-command-injection-go
+    languages: [go]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          exec.Command("/bin/sh", "-c", $USER_INPUT)
+    fix: |
+      Use secure command execution methods or sanitize inputs before passing to system commands. Example:
+      
+      ```go
+      cmd := exec.Command("cmd", "/c", $USER_INPUT)
+      cmd.Run()
+      ```
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-path-traversal-go
+    languages: [go]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          ioutil.ReadFile($USER_INPUT)
+      - pattern: |
+          os.Open($USER_INPUT)
+    fix: |
+      Use `filepath.Clean()` to sanitize file paths. Example:
+      
+      ```go
+      safePath := filepath.Clean($USER_INPUT)
+      ioutil.ReadFile(safePath)
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization-go
+    languages: [go]
+    message: |
+      Possible Insecure Deserialization vulnerability. Avoid deserializing untrusted user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          gob.NewDecoder($USER_INPUT).Decode(&data)
+    fix: |
+      Validate or sanitize input before deserializing or use safer formats like JSON. Example:
+      
+      ```go
+      json.Unmarshal($USER_INPUT, &data)
+      ```
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-sensitive-data-exposure-go
+    languages: [go]
+    message: |
+      Sensitive data exposure. Avoid logging sensitive information such as passwords or credit card numbers.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          log.Println($SENSITIVE_DATA)
+      - pattern: |
+          fmt.Println($SENSITIVE_DATA)
+    fix: |
+      Mask sensitive data before logging or output. Example:
+      
+      ```go
+      log.Println(maskSensitiveData($SENSITIVE_DATA))
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-weak-encryption-go
+    languages: [go]
+    message: |
+      Weak encryption algorithm detected. Avoid using deprecated cryptographic algorithms such as DES.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          des.NewCipher($KEY)
+      - pattern-not: |
+          aes.NewCipher($KEY)
+    fix: |
+      Use strong encryption algorithms such as AES with appropriate key sizes. Example:
+      
+      ```go
+      aes.NewCipher($KEY)
+      ```
+    metadata:
+      cwe: CWE-327
+      owasp: A6: Security Misconfiguration
