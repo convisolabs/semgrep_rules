@@ -1,0 +1,145 @@
+# ==========================================================
+# Semgrep Ruleset for Swift Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Swift applications, including Insecure Data Storage, 
+#              Insecure Network Requests, SQL Injection, and Hardcoded Secrets.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-swift
+    languages: [swift]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.executeQuery("SELECT * FROM users WHERE username = '\($USER_INPUT)'")
+    fix: |
+      Use parameterized queries to avoid SQL Injection. Example:
+      
+      ```swift
+      db.executeQuery("SELECT * FROM users WHERE username = ?", [userInput])
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-insecure-data-storage-swift
+    languages: [swift]
+    message: |
+      Insecure usage of data storage detected. Avoid storing sensitive information in plaintext in UserDefaults.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          UserDefaults.standard.set($PASSWORD, forKey: "password")
+    fix: |
+      Use **Keychain Services** to securely store sensitive information like passwords instead of **UserDefaults**. Example:
+      
+      ```swift
+      let keychain = Keychain(service: "com.example.app")
+      keychain["password"] = $PASSWORD
+      ```
+    metadata:
+      cwe: CWE-312
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-network-request-swift
+    languages: [swift]
+    message: |
+      Insecure network request detected. Avoid making HTTP requests without proper SSL/TLS validation.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          let url = URL(string: $URL)
+          let task = URLSession.shared.dataTask(with: url!) { data, response, error in
+          }
+    fix: |
+      Use **URLSession** with SSL/TLS validation and avoid using plain **HTTP**. Example:
+      
+      ```swift
+      let url = URL(string: "https://secure-api.com")
+      var request = URLRequest(url: url!)
+      request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+      let task = URLSession.shared.dataTask(with: request) { data, response, error in
+      }
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-hardcoded-secrets-swift
+    languages: [swift]
+    message: |
+      Hardcoded secrets detected in Swift code. Avoid storing sensitive information like API keys or passwords directly in source code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          let apiKey = "$API_KEY"
+      - pattern: |
+          let password = "$PASSWORD"
+    fix: |
+      Store sensitive information in **Keychain Services** or **Environment Variables** instead of hardcoding them. Example:
+      
+      ```swift
+      let apiKey = ProcessInfo.processInfo.environment["API_KEY"]
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-use-of-webview-swift
+    languages: [swift]
+    message: |
+      Insecure WebView usage detected. Avoid enabling JavaScript or loading user-generated content without sanitization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          webView.configuration.preferences.javaScriptEnabled = true
+    fix: |
+      Avoid enabling JavaScript in WebView or sanitize input before loading URLs. Example:
+      
+      ```swift
+      webView.configuration.preferences.javaScriptEnabled = false
+      webView.load(URLRequest(url: URL(string: sanitizeUrl($URL))!))
+      ```
+    metadata:
+      cwe: CWE-937
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-insecure-use-of-clipboard-swift
+    languages: [swift]
+    message: |
+      Storing sensitive information in the clipboard can expose it to other applications. Avoid using the clipboard for sensitive data.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          UIPasteboard.general.string = $SENSITIVE_DATA
+    fix: |
+      Avoid storing sensitive information in the clipboard to prevent exposure. Example:
+      
+      ```swift
+      // Avoid storing sensitive data in the clipboard
+      ```
+    metadata:
+      cwe: CWE-532
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-intent-swift
+    languages: [swift]
+    message: |
+      Insecure usage of Intent detected. Avoid passing sensitive information via Intent extras without encryption.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          intent.putExtra("password", $PASSWORD)
+    fix: |
+      Use encrypted data when passing sensitive information through **Intent**. Example:
+      
+      ```swift
+      let encryptedPassword = encrypt(password)
+      intent.putExtra("password", encryptedPassword)
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
