@@ -1,0 +1,127 @@
+# ==========================================================
+# Semgrep Ruleset for Java Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Java code, including SQL Injection,
+#              XSS, Command Injection, Path Traversal, Insecure Deserialization,
+#              Weak Cryptography, and more. Suggested fixes included.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection
+    languages: [java]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+      Suggested Fix: Use prepared statements (e.g., PreparedStatement) to prevent SQL Injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          Statement stmt = connection.createStatement();
+          stmt.executeQuery("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'")
+      - pattern-not: |
+          PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM users WHERE name = ?");
+          pstmt.setString(1, $USER_INPUT);
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-xss
+    languages: [java]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid inserting unsanitized user input into the HTML output stream.
+      Suggested Fix: Use a library like OWASP Java Encoder to encode user input before outputting to the browser.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          out.println($USER_INPUT)
+      - pattern-not: |
+          out.println(Encode.forHtml($USER_INPUT))
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-command-injection
+    languages: [java]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+      Suggested Fix: Use a whitelist for acceptable commands or sanitize user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          Runtime.getRuntime().exec($CMD + " " + $USER_INPUT)
+      - pattern-not: |
+          Runtime.getRuntime().exec($CMD + " " + sanitize($USER_INPUT))
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-path-traversal
+    languages: [java]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+      Suggested Fix: Use File.getCanonicalPath() or sanitize file paths to prevent unauthorized file access.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          new FileInputStream($USER_INPUT)
+      - pattern: |
+          new FileOutputStream($USER_INPUT)
+      - pattern-not: |
+          new FileInputStream(new File($USER_INPUT).getCanonicalPath())
+      - pattern-not: |
+          new FileOutputStream(new File($USER_INPUT).getCanonicalPath())
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization
+    languages: [java]
+    message: |
+      Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
+      Suggested Fix: Use safe serialization formats like JSON and validate inputs before deserializing.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          ObjectInputStream in = new ObjectInputStream(new FileInputStream($USER_INPUT));
+          Object obj = in.readObject();
+      - pattern-not: |
+          // Add validation checks before deserialization
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-sensitive-data-exposure
+    languages: [java]
+    message: |
+      Sensitive data exposure. Avoid logging sensitive information.
+      Suggested Fix: Mask sensitive data (e.g., passwords, credit card numbers) before logging.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          System.out.println($SENSITIVE_DATA)
+      - pattern: |
+          logger.debug($SENSITIVE_DATA)
+      - pattern-not: |
+          System.out.println(maskSensitiveData($SENSITIVE_DATA))
+      - pattern-not: |
+          logger.debug(maskSensitiveData($SENSITIVE_DATA))
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-weak-cryptography
+    languages: [java]
+    message: |
+      Weak or deprecated cryptography algorithm detected. Using outdated cryptography can compromise security.
+      Suggested Fix: Use strong algorithms like AES with a proper key size (e.g., AES-256).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          Cipher.getInstance("DES")
+      - pattern: |
+          Cipher.getInstance("RC4")
+      - pattern-not: |
+          Cipher.getInstance("AES")
+    metadata:
+      cwe: CWE-327
+      owasp: A6: Security Misconfiguration
