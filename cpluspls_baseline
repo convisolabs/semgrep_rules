@@ -1,0 +1,158 @@
+# ==========================================================
+# Semgrep Ruleset for C++ Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in C++ applications, including Buffer Overflow,
+#              Use After Free, Null Pointer Dereference,
+#              Memory Leaks, and Command Injection.
+# ==========================================================
+
+rules:
+  - id: detect-buffer-overflow
+    languages: [cpp]
+    message: |
+      Potential Buffer Overflow detected. Avoid using unsafe functions such as `strcpy`, `strcat`, or `sprintf` without proper bounds checking.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          strcpy($DST, $SRC);
+      - pattern: |
+          strcat($DST, $SRC);
+      - pattern: |
+          sprintf($BUF, $FMT, ...);
+    fix: |
+      Use safer alternatives like `strncpy` or `snprintf`, ensuring the buffer size is properly checked. Example:
+      
+      ```cpp
+      strncpy($DST, $SRC, sizeof($DST) - 1);
+      $DST[sizeof($DST) - 1] = '\0';
+      ```
+
+  - id: detect-use-after-free
+    languages: [cpp]
+    message: |
+      Potential Use After Free detected. Using memory after it has been freed can cause undefined behavior and vulnerabilities.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          delete $PTR;
+          $VAR = *$PTR;
+    fix: |
+      Set the pointer to NULL after freeing the memory to avoid accidental use. Example:
+      
+      ```cpp
+      delete $PTR;
+      $PTR = nullptr;
+      ```
+
+  - id: detect-null-pointer-dereference
+    languages: [cpp]
+    message: |
+      Null Pointer Dereference detected. Dereferencing a null pointer can lead to undefined behavior and crashes.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          *$PTR;
+      - pattern-not: |
+          if ($PTR != nullptr) {
+            *$PTR;
+          }
+    fix: |
+      Ensure the pointer is not null before dereferencing it. Example:
+      
+      ```cpp
+      if ($PTR != nullptr) {
+        *$PTR;
+      }
+      ```
+
+  - id: detect-integer-overflow
+    languages: [cpp]
+    message: |
+      Possible Integer Overflow detected. Ensure proper checks are in place when performing arithmetic operations on integers.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $VAR = $X + $Y;
+      - pattern: |
+          $VAR = $X * $Y;
+    fix: |
+      Add checks to ensure that the result does not exceed the limits of the integer type. Example:
+      
+      ```cpp
+      if ($X > INT_MAX - $Y) {
+        // Handle overflow case
+      }
+      $VAR = $X + $Y;
+      ```
+
+  - id: detect-command-injection
+    languages: [cpp]
+    message: |
+      Potential Command Injection detected. Avoid using functions like `system`, `popen`, or `exec` with untrusted input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          system($CMD);
+      - pattern: |
+          popen($CMD, $MODE);
+      - pattern: |
+          exec($CMD);
+    fix: |
+      Use safer alternatives and sanitize inputs before executing commands. Example:
+      
+      ```cpp
+      if (validate_input($CMD)) {
+        system($CMD);
+      }
+      ```
+
+  - id: detect-memory-leak
+    languages: [cpp]
+    message: |
+      Possible memory leak detected. Ensure that dynamically allocated memory is freed before the function returns or at the end of its lifecycle.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $PTR = new $TYPE[$SIZE];
+          return $RESULT;
+    fix: |
+      Free the allocated memory before returning or exiting the function. Example:
+      
+      ```cpp
+      delete[] $PTR;
+      return $RESULT;
+      ```
+
+  - id: detect-unsafe-pointer-arithmetic
+    languages: [cpp]
+    message: |
+      Unsafe pointer arithmetic detected. Ensure that pointer manipulation is done within the bounds of the allocated memory.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $PTR = $PTR + $OFFSET;
+    fix: |
+      Ensure that pointer arithmetic does not exceed the bounds of the allocated buffer. Example:
+      
+      ```cpp
+      if ($PTR + $OFFSET < $BUF_END) {
+        $PTR = $PTR + $OFFSET;
+      }
+      ```
+
+  - id: detect-strncpy-misuse
+    languages: [cpp]
+    message: |
+      Possible misuse of `strncpy` detected. Ensure the destination buffer is properly null-terminated.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          strncpy($DST, $SRC, $SIZE);
+    fix: |
+      After using `strncpy`, explicitly add a null terminator to ensure the destination string is properly terminated. Example:
+      
+      ```cpp
+      strncpy($DST, $SRC, $SIZE - 1);
+      $DST[$SIZE - 1] = '\0';
+      ```
