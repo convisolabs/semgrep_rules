@@ -1,122 +1,127 @@
 # ==========================================================
-# Semgrep Ruleset for Ruby on Rails Security
+# Semgrep Ruleset for Ruby and Ruby on Rails Security
 # Created by: Conviso
 # Description: This ruleset is designed to detect common
-#              vulnerabilities in Ruby on Rails applications, including
-#              SQL Injection, XSS, Mass Assignment, Command Injection, 
-#              and more. Suggested fixes included.
+#              vulnerabilities in Ruby and Ruby on Rails applications,
+#              including SQL Injection, Mass Assignment, Command Injection,
+#              and Path Traversal.
 # ==========================================================
 
 rules:
-  - id: detect-sql-injection
+  - id: detect-sql-injection-rails
     languages: [ruby]
     message: |
-      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
-      Suggested Fix: Use ActiveRecord's parameterized queries (e.g., where with placeholders).
+      Possible SQL Injection vulnerability in Rails ActiveRecord query. Avoid using unsanitized user input.
     severity: ERROR
     patterns:
       - pattern: |
           User.where("name = '#{params[:name]}'")
-      - pattern-not: |
-          User.where("name = ?", params[:name])
+    fix: |
+      Use parameterized queries with ActiveRecord to avoid SQL Injection. Example:
+      
+      ```ruby
+      User.where("name = ?", params[:name])
+      ```
     metadata:
       cwe: CWE-89
       owasp: A1: Injection
 
-  - id: detect-xss
+  - id: detect-mass-assignment-rails
     languages: [ruby]
     message: |
-      Possible Cross-Site Scripting (XSS) vulnerability. Avoid outputting unsanitized user input in views.
-      Suggested Fix: Use Rails' built-in escaping methods such as `h()` or `sanitize()`.
-    severity: ERROR
-    patterns:
-      - pattern: |
-          = params[:input]
-      - pattern-not: |
-          = h(params[:input])
-      - pattern-not: |
-          = sanitize(params[:input])
-    metadata:
-      cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
-
-  - id: detect-mass-assignment
-    languages: [ruby]
-    message: |
-      Possible Mass Assignment vulnerability. Avoid using unsanitized user input in `new` or `update` without strong parameters.
-      Suggested Fix: Use `require` and `permit` with strong parameters to whitelist allowed attributes.
+      Possible Mass Assignment vulnerability. Avoid using unsanitized user input in `new` or `update`.
     severity: ERROR
     patterns:
       - pattern: |
           User.new(params[:user])
       - pattern: |
           @user.update(params[:user])
-      - pattern-not: |
-          User.new(user_params)
-      - pattern-not: |
-          @user.update(user_params)
+    fix: |
+      Use strong parameters to whitelist allowed attributes. Example:
+      
+      ```ruby
+      params.require(:user).permit(:name, :email)
+      ```
     metadata:
       cwe: CWE-915
       owasp: A4: Insecure Design
 
-  - id: detect-command-injection
+  - id: detect-command-injection-ruby
     languages: [ruby]
     message: |
       Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
-      Suggested Fix: Use `system()`, `exec()`, or backticks with sanitized inputs or an array to avoid injection risks.
     severity: ERROR
     patterns:
       - pattern: |
           `#{params[:command]}`
       - pattern: |
           system(params[:command])
-      - pattern-not: |
-          system("safe_command", params[:command])
+    fix: |
+      Use `system()` or backticks with sanitized inputs to avoid Command Injection. Example:
+      
+      ```ruby
+      system("safe_command", params[:command])
+      ```
     metadata:
       cwe: CWE-78
       owasp: A1: Injection
 
-  - id: detect-insecure-deserialization
+  - id: detect-path-traversal-ruby
     languages: [ruby]
     message: |
-      Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
-      Suggested Fix: Use JSON parsing or strong input validation before deserializing.
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          File.read(params[:file_path])
+      - pattern: |
+          File.open(params[:file_path])
+    fix: |
+      Use `File.expand_path` or validate input paths to avoid Path Traversal. Example:
+      
+      ```ruby
+      safe_path = File.expand_path(params[:file_path])
+      File.read(safe_path)
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization-ruby
+    languages: [ruby]
+    message: |
+      Possible Insecure Deserialization vulnerability. Avoid deserializing untrusted user input.
     severity: ERROR
     patterns:
       - pattern: |
           Marshal.load(params[:data])
+    fix: |
+      Avoid using `Marshal.load()` with untrusted data or use safer alternatives like JSON. Example:
+      
+      ```ruby
+      data = JSON.parse(params[:data])
+      ```
     metadata:
       cwe: CWE-502
       owasp: A8: Insecure Deserialization
 
-  - id: detect-sensitive-data-exposure
+  - id: detect-sensitive-data-exposure-ruby
     languages: [ruby]
     message: |
       Sensitive data exposure. Avoid logging sensitive information such as passwords or credit card numbers.
-      Suggested Fix: Mask sensitive data before logging or use Rails' `filter_parameters`.
     severity: WARNING
     patterns:
       - pattern: |
           logger.debug(params[:password])
       - pattern: |
           puts params[:credit_card]
+    fix: |
+      Mask sensitive data before logging or output. Example:
+      
+      ```ruby
+      logger.debug(mask_sensitive_data(params[:password]))
+      ```
     metadata:
       cwe: CWE-200
       owasp: A3: Sensitive Data Exposure
 
-  - id: detect-weak-encryption
-    languages: [ruby]
-    message: |
-      Weak encryption algorithm detected. Avoid using deprecated cryptographic algorithms like DES.
-      Suggested Fix: Use stronger algorithms such as AES with appropriate key sizes (e.g., AES-256).
-    severity: ERROR
-    patterns:
-      - pattern: |
-          OpenSSL::Cipher::DES.new
-      - pattern: |
-          OpenSSL::Cipher::RC4.new
-      - pattern-not: |
-          OpenSSL::Cipher::AES.new
-    metadata:
-      cwe: CWE-327
-      owasp: A6: Security Misconfiguration
