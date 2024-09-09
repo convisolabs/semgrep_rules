@@ -1,0 +1,48 @@
+# ==========================================================
+# Semgrep Ruleset for Flask Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Flask applications, including 
+#              SQL Injection, Missing CSRF Protection, and others.
+# ==========================================================
+
+rules:
+  - id: detect-flask-missing-csrf
+    languages: [python]
+    message: |
+      CSRF protection is missing in a Flask form or route. This can lead to Cross-Site Request Forgery (CSRF) attacks.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          @app.route($ENDPOINT, methods=['POST'])
+      - pattern-not: |
+          @app.route($ENDPOINT, methods=['POST'])
+          @csrf_protect
+    fix: |
+      Enable CSRF protection in Flask using a CSRF extension. Example:
+      
+      ```python
+      from flask_wtf.csrf import CSRFProtect
+      csrf = CSRFProtect(app)
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: CSRF
+
+  - id: detect-sqlalchemy-sql-injection
+    languages: [python]
+    message: |
+      Possible SQL Injection vulnerability in SQLAlchemy query. Avoid using unsanitized user input in queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.execute("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'")
+    fix: |
+      Use parameterized queries in SQLAlchemy. Example:
+      
+      ```python
+      db.execute("SELECT * FROM users WHERE name = :name", {"name": user_input})
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
