@@ -1,10 +1,10 @@
 # ==========================================================
-# Semgrep Ruleset for Ruby and Ruby on Rails Security
+# Semgrep Ruleset for Ruby and Ruby Frameworks Security
 # Created by: Conviso
 # Description: This ruleset is designed to detect common
-#              vulnerabilities in Ruby and Ruby on Rails applications,
-#              including SQL Injection, Mass Assignment, Command Injection,
-#              and Path Traversal.
+#              vulnerabilities in Ruby applications, including Rails,
+#              Sinatra, Hanami, and Padrino, covering SQL Injection,
+#              Mass Assignment, Command Injection, and Path Traversal.
 # ==========================================================
 
 rules:
@@ -18,6 +18,60 @@ rules:
           User.where("name = '#{params[:name]}'")
     fix: |
       Use parameterized queries with ActiveRecord to avoid SQL Injection. Example:
+      
+      ```ruby
+      User.where("name = ?", params[:name])
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-sinatra
+    languages: [ruby]
+    message: |
+      Possible SQL Injection vulnerability in Sinatra database query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          DB.execute("SELECT * FROM users WHERE name = '" + params[:name] + "'")
+    fix: |
+      Use parameterized queries to avoid SQL Injection in Sinatra. Example:
+      
+      ```ruby
+      DB.execute("SELECT * FROM users WHERE name = ?", [params[:name]])
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-hanami
+    languages: [ruby]
+    message: |
+      Possible SQL Injection vulnerability in Hanami query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          repo.where("name = '#{params[:name]}'")
+    fix: |
+      Use parameterized queries in Hanami to prevent SQL Injection. Example:
+      
+      ```ruby
+      repo.where(name: params[:name])
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-sql-injection-padrino
+    languages: [ruby]
+    message: |
+      Possible SQL Injection vulnerability in Padrino ActiveRecord query. Avoid using unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          User.where("name = '#{params[:name]}'")
+    fix: |
+      Use parameterized queries with ActiveRecord in Padrino. Example:
       
       ```ruby
       User.where("name = ?", params[:name])
@@ -124,4 +178,5 @@ rules:
     metadata:
       cwe: CWE-200
       owasp: A3: Sensitive Data Exposure
+
 
