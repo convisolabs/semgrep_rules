@@ -1,0 +1,145 @@
+# ==========================================================
+# Semgrep Ruleset for Next.js Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Next.js applications, including SSR Injections, XSS, 
+#              API Misconfigurations, and Exposure of Sensitive Data.
+# ==========================================================
+
+rules:
+  - id: detect-xss-nextjs
+    languages: [javascript, typescript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid using unsanitized user input in server-side or client-side rendering.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return <div dangerouslySetInnerHTML={{ __html: req.query.content }} />;
+    fix: |
+      Use a sanitization library like **DOMPurify** to sanitize the content before rendering. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      const sanitizedContent = DOMPurify.sanitize(req.query.content);
+      return <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-api-routes-nextjs
+    languages: [javascript, typescript]
+    message: |
+      Insecure API route detected. Ensure that sensitive data or actions are protected with proper authentication and authorization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          export default (req, res) => { res.status(200).json({ data: 'Sensitive data' }) }
+    fix: |
+      Implement proper authentication and authorization checks before exposing sensitive data or performing actions. Example:
+      
+      ```javascript
+      import { getSession } from 'next-auth/client';
+      export default async (req, res) => {
+        const session = await getSession({ req });
+        if (!session) {
+          return res.status(401).json({ error: 'Not authenticated' });
+        }
+        res.status(200).json({ data: 'Sensitive data' });
+      };
+      ```
+    metadata:
+      cwe: CWE-284
+      owasp: A5: Broken Access Control
+
+  - id: detect-exposure-of-sensitive-env-vars-nextjs
+    languages: [javascript, typescript]
+    message: |
+      Sensitive environment variable exposed. Ensure that sensitive data is not exposed in the frontend by prefixing public variables with `NEXT_PUBLIC_`.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          process.env.$SECRET
+    fix: |
+      Ensure that only public environment variables are exposed in the frontend, and sensitive environment variables are accessed only on the server side. Example:
+      
+      ```javascript
+      // Frontend variables should start with NEXT_PUBLIC_
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      // Sensitive variables should only be used on the server side
+      const secretKey = process.env.SECRET_API_KEY;
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-ssr-injection-nextjs
+    languages: [javascript, typescript]
+    message: |
+      Potential SSR Injection vulnerability detected. Avoid rendering unsanitized user input on the server-side without proper sanitization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          export async function getServerSideProps(context) {
+            return { props: { content: context.query.content } };
+          }
+    fix: |
+      Sanitize the user input before rendering it on the server. Use libraries like **DOMPurify** to prevent SSR-based XSS attacks. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      export async function getServerSideProps(context) {
+        const sanitizedContent = DOMPurify.sanitize(context.query.content);
+        return { props: { content: sanitizedContent } };
+      }
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-file-handling-nextjs
+    languages: [javascript, typescript]
+    message: |
+      Insecure file handling detected. Avoid using unsanitized user input in file paths to prevent path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          res.sendFile(req.query.filePath)
+    fix: |
+      Use **path** library to sanitize and normalize file paths, ensuring that user input cannot manipulate file access paths. Example:
+      
+      ```javascript
+      import path from 'path';
+      const safePath = path.join(__dirname, 'public', path.normalize(req.query.filePath));
+      res.sendFile(safePath);
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-missing-csrf-protection-nextjs
+    languages: [javascript, typescript]
+    message: |
+      CSRF protection is missing for API routes that modify state. Implement CSRF protection to prevent unauthorized actions on behalf of users.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          app.post($ENDPOINT, $MIDDLEWARE)
+      - pattern-not: |
+          csrf({ cookie: true })
+    fix: |
+      Use the `csurf` middleware to add CSRF protection to your API routes. Example:
+      
+      ```javascript
+      import csrf from 'csurf';
+      const csrfProtection = csrf({ cookie: true });
+
+      export default async function handler(req, res) {
+        await csrfProtection(req, res);
+        // Process the request securely
+      }
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: Cross-Site Request Forgery (CSRF)
