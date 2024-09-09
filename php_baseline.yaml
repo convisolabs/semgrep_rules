@@ -1,0 +1,168 @@
+# ==========================================================
+# Semgrep Ruleset for PHP Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in PHP applications, including SQL Injection,
+#              XSS, Command Injection, Path Traversal, Insecure Deserialization,
+#              and more. Includes support for frameworks like Laravel.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection
+    languages: [php]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $DB->query("SELECT * FROM $TABLE WHERE $COLUMN = '" . $USER_INPUT . "'")
+      - pattern: |
+          mysqli_query($DB, "SELECT * FROM $TABLE WHERE $COLUMN = '" . $USER_INPUT . "'")
+      - pattern: |
+          pg_query($DB, "SELECT * FROM $TABLE WHERE $COLUMN = '" . $USER_INPUT . "'")
+      - pattern: |
+          sqlite_query($DB, "SELECT * FROM $TABLE WHERE $COLUMN = '" . $USER_INPUT . "'")
+      - pattern: |
+          DB::select("SELECT * FROM $TABLE WHERE $COLUMN = '" . $USER_INPUT . "'")
+      - pattern-not: |
+          $stmt = $DB->prepare("SELECT * FROM $TABLE WHERE $COLUMN = ?");
+          $stmt->bind_param("s", $USER_INPUT);
+      - pattern-not: |
+          DB::table($TABLE)->where($COLUMN, '=', $USER_INPUT)->get();
+    fix: |
+      Use parameterized queries with PDO, MySQLi, or use Laravel's query builder. For example:
+      
+      ```php
+      // Using PDO
+      $stmt = $DB->prepare("SELECT * FROM $TABLE WHERE $COLUMN = ?");
+      $stmt->execute([$USER_INPUT]);
+      
+      // Using Laravel query builder
+      DB::table($TABLE)->where($COLUMN, '=', $USER_INPUT)->get();
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-xss
+    languages: [php]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid outputting unsanitized user input in HTML content.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          echo $USER_INPUT;
+      - pattern-not: |
+          echo htmlspecialchars($USER_INPUT, ENT_QUOTES, 'UTF-8');
+      - pattern-not: |
+          {{ $USER_INPUT }} # Laravel Blade templating sanitizes output by default
+    fix: |
+      Use `htmlspecialchars()` or `htmlentities()` to escape user input before output, or use Laravel's Blade templating engine with `{{ }}`.
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-command-injection
+    languages: [php]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          system($COMMAND . " " . $USER_INPUT);
+      - pattern: |
+          exec($COMMAND . " " . $USER_INPUT);
+      - pattern-not: |
+          exec($COMMAND, escapeshellarg($USER_INPUT));
+    fix: |
+      Use `escapeshellarg()` or pass commands as an array to `exec()`. For example:
+      
+      ```php
+      exec($COMMAND, escapeshellarg($USER_INPUT));
+      ```
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-path-traversal
+    languages: [php]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          file_get_contents($USER_INPUT);
+      - pattern: |
+          unlink($USER_INPUT);
+      - pattern-not: |
+          file_get_contents(realpath($USER_INPUT));
+    fix: |
+      Use `realpath()` or sanitize file paths to avoid path traversal attacks. For example:
+      
+      ```php
+      $safe_path = realpath($USER_INPUT);
+      if ($safe_path) {
+        file_get_contents($safe_path);
+      }
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization
+    languages: [php]
+    message: |
+      Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          unserialize($USER_INPUT);
+    fix: |
+      Avoid using `unserialize()` with untrusted data or validate the input beforehand. Prefer safer alternatives like JSON:
+      
+      ```php
+      $data = json_decode($USER_INPUT, true);
+      ```
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-sensitive-data-exposure
+    languages: [php]
+    message: |
+      Sensitive data exposure. Avoid logging sensitive information such as passwords or credit card numbers.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          error_log($SENSITIVE_DATA);
+      - pattern: |
+          echo $SENSITIVE_DATA;
+    fix: |
+      Mask sensitive data before logging or output. For example:
+      
+      ```php
+      error_log(mask_sensitive_data($SENSITIVE_DATA));
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-weak-encryption
+    languages: [php]
+    message: |
+      Weak encryption algorithm detected. Avoid using deprecated cryptographic algorithms such as DES.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          mcrypt_module_open('des', '', MCRYPT_MODE_CBC, '');
+      - pattern-not: |
+          openssl_encrypt($DATA, 'aes-256-cbc', $KEY);
+    fix: |
+      Use stronger algorithms like AES with proper key sizes (e.g., AES-256). For example:
+      
+      ```php
+      openssl_encrypt($DATA, 'aes-256-cbc', $KEY);
+      ```
+    metadata:
+      cwe: CWE-327
+      owasp: A6: Security Misconfiguration
