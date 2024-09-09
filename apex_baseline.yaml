@@ -1,0 +1,135 @@
+# ==========================================================
+# Semgrep Ruleset for Salesforce Apex Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Salesforce Apex code, including SOQL Injection, 
+#              Insecure DML Operations, and Apex Class Visibility.
+# ==========================================================
+
+rules:
+  - id: detect-soql-injection-apex
+    languages: [apex]
+    message: |
+      Possible SOQL Injection vulnerability. Avoid using unsanitized user input in dynamic SOQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          String query = 'SELECT Id FROM Account WHERE Name = \'' + $USER_INPUT + '\'';
+      - pattern: |
+          [Database.query(query)]
+    fix: |
+      Use parameterized queries or the `escapeSingleQuotes` method to sanitize user input before including it in SOQL queries. Example:
+      
+      ```apex
+      String safeInput = String.escapeSingleQuotes($USER_INPUT);
+      List<Account> accounts = [SELECT Id FROM Account WHERE Name = :safeInput];
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-insecure-dml-apex
+    languages: [apex]
+    message: |
+      Insecure DML operation detected. Ensure proper security checks are in place before performing DML operations.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          insert $RECORD;
+      - pattern: |
+          update $RECORD;
+    fix: |
+      Use the `Database.insert` or `Database.update` methods with appropriate `allOrNone` parameters and error handling to avoid bulk DML failures or security issues. Example:
+      
+      ```apex
+      Database.SaveResult[] results = Database.insert(records, false);
+      if (!results[0].isSuccess()) {
+        // Handle the error
+      }
+      ```
+    metadata:
+      cwe: CWE-284
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-apex-class-visibility
+    languages: [apex]
+    message: |
+      Insecure Apex class visibility. Avoid marking Apex classes as `global` unless absolutely necessary.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          global class $CLASS_NAME
+    fix: |
+      Restrict class visibility to `public` or `private` if the class does not need to be globally accessible. Example:
+      
+      ```apex
+      public class MyController {
+        // Class logic here
+      }
+      ```
+    metadata:
+      cwe: CWE-281
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-insecure-apex-webservice-method
+    languages: [apex]
+    message: |
+      Insecure use of Apex `@webService` methods. Avoid exposing methods unnecessarily or without proper access control.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          @webService public static $METHOD_NAME
+    fix: |
+      Ensure that the web service methods are restricted with proper access control and only exposed when absolutely necessary. Example:
+      
+      ```apex
+      @webService public static void secureMethod() {
+        // Logic with access control checks
+      }
+      ```
+    metadata:
+      cwe: CWE-732
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-insecure-apex-soap-callout
+    languages: [apex]
+    message: |
+      Insecure SOAP callout detected. Avoid making SOAP callouts without proper input sanitization and error handling.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          HttpRequest req = new HttpRequest();
+          req.setMethod('POST');
+          req.setEndpoint($URL);
+    fix: |
+      Validate input data and use proper error handling in SOAP callouts to avoid security risks. Example:
+      
+      ```apex
+      HttpResponse res;
+      try {
+        res = http.send(req);
+      } catch (Exception e) {
+        // Handle the error
+      }
+      ```
+    metadata:
+      cwe: CWE-300
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-hardcoded-credentials-apex
+    languages: [apex]
+    message: |
+      Hardcoded credentials detected in Apex code. Avoid storing sensitive information directly in the code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          String password = "$PASSWORD";
+    fix: |
+      Use Salesforce's **protected custom settings** or **named credentials** to securely store sensitive information instead of hardcoding it. Example:
+      
+      ```apex
+      String password = [SELECT Password__c FROM Credential__c WHERE Name = 'MyCredentials'].Password__c;
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
