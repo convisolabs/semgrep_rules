@@ -1,0 +1,144 @@
+# ==========================================================
+# Semgrep Ruleset for Flutter Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Flutter applications, including Insecure Storage, 
+#              Insecure HTTP Requests, and Input Handling vulnerabilities.
+# ==========================================================
+
+rules:
+  - id: detect-insecure-shared-preferences-flutter
+    languages: [dart]
+    message: |
+      Insecure usage of `SharedPreferences` detected. Avoid storing sensitive information in `SharedPreferences`.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          SharedPreferences.setString("password", $PASSWORD)
+    fix: |
+      Avoid storing sensitive data like passwords in `SharedPreferences`. Instead, consider using secure storage options like **flutter_secure_storage**. Example:
+      
+      ```dart
+      final secureStorage = FlutterSecureStorage();
+      secureStorage.write(key: "password", value: $PASSWORD);
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-http-flutter
+    languages: [dart]
+    message: |
+      Insecure HTTP request detected. Avoid using HTTP without proper SSL/TLS validation in production.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          http.get($URL)
+    fix: |
+      Ensure SSL/TLS certificates are validated and avoid making HTTP requests without encryption. Example:
+      
+      ```dart
+      final client = HttpClient()
+        ..badCertificateCallback = (X509Certificate cert, String host, int port) => false;
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-http-post-flutter
+    languages: [dart]
+    message: |
+      Insecure HTTP POST request detected. Ensure sensitive information is sent over HTTPS and validate server certificates.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          http.post($URL, body: $BODY)
+    fix: |
+      Ensure HTTPS is used for sending sensitive information and validate the server certificates. Example:
+      
+      ```dart
+      final client = HttpClient()
+        ..badCertificateCallback = (X509Certificate cert, String host, int port) => false;
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-webview-flutter
+    languages: [dart]
+    message: |
+      Insecure usage of `WebView` detected. Avoid enabling JavaScript or loading user-generated content without sanitization.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          WebView(
+            javascriptMode: JavascriptMode.unrestricted,
+            initialUrl: $URL
+          )
+    fix: |
+      Avoid enabling JavaScript in `WebView` or sanitize input before loading URLs. Example:
+      
+      ```dart
+      WebView(
+        javascriptMode: JavascriptMode.disabled,
+        initialUrl: sanitizeUrl($URL),
+      )
+      ```
+    metadata:
+      cwe: CWE-937
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-hardcoded-credentials-flutter
+    languages: [dart]
+    message: |
+      Hardcoded credentials detected. Avoid storing sensitive information directly in code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          const String password = "$PASSWORD"
+    fix: |
+      Use secure storage mechanisms or environment variables to store sensitive data. Example:
+      
+      ```dart
+      final password = secureStorage.read(key: "password");
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-use-of-clipboard-flutter
+    languages: [dart]
+    message: |
+      Storing sensitive information in the clipboard can expose it to other applications. Avoid using the clipboard for sensitive data.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          Clipboard.setData(ClipboardData(text: $SENSITIVE_DATA))
+    fix: |
+      Avoid storing sensitive information in the clipboard to prevent exposure. Example:
+      
+      ```dart
+      // Avoid using clipboard for sensitive data
+      ```
+    metadata:
+      cwe: CWE-532
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-use-of-intent-flutter
+    languages: [dart]
+    message: |
+      Insecure usage of `Intent` detected. Avoid passing sensitive information via `Intent` extras without encryption.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          intent.putExtra("password", $PASSWORD)
+    fix: |
+      Use encrypted data when passing sensitive information through `Intent`. Example:
+      
+      ```dart
+      final encryptedPassword = encrypt(password);
+      intent.putExtra("password", encryptedPassword);
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
