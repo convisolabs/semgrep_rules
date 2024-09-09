@@ -1,0 +1,128 @@
+# ==========================================================
+# Semgrep Ruleset for React Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in React applications, including XSS, Insecure eval,
+#              Insecure DOM Manipulation, and Unsafe Component Methods.
+# ==========================================================
+
+rules:
+  - id: detect-xss-react
+    languages: [javascript, typescript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid using unsanitized user input in React components.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          dangerouslySetInnerHTML={{ __html: $USER_INPUT }}
+    fix: |
+      Avoid using `dangerouslySetInnerHTML` with unsanitized input, or sanitize the input before rendering it. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize($USER_INPUT) }} />
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-eval-react
+    languages: [javascript, typescript]
+    message: |
+      Unsafe use of `eval` detected in React components. Avoid using `eval` with dynamic input as it can lead to code injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          eval($USER_INPUT)
+    fix: |
+      Avoid using `eval` or find safer alternatives such as `JSON.parse()`. Example:
+      
+      ```javascript
+      const safeData = JSON.parse($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
+
+  - id: detect-insecure-dom-manipulation-react
+    languages: [javascript, typescript]
+    message: |
+      Insecure DOM manipulation detected in React. Avoid manipulating the DOM directly with unsanitized user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          document.getElementById($ELEMENT_ID).innerHTML = $USER_INPUT
+    fix: |
+      Avoid manipulating the DOM directly in React. Instead, use React's rendering methods with sanitized inputs. Example:
+      
+      ```javascript
+      import DOMPurify from 'dompurify';
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize($USER_INPUT) }} />
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-unsafe-local-storage-react
+    languages: [javascript, typescript]
+    message: |
+      Avoid storing sensitive data like passwords or tokens in Local Storage, which can be accessed by JavaScript.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          localStorage.setItem("token", $USER_INPUT)
+    fix: |
+      Avoid storing sensitive data in Local Storage. Instead, store tokens in cookies with `HttpOnly` and `Secure` flags. Example:
+      
+      ```javascript
+      document.cookie = "token=" + token + "; Secure; HttpOnly";
+      ```
+    metadata:
+      cwe: CWE-922
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-component-did-mount
+    languages: [javascript, typescript]
+    message: |
+      Avoid using `componentDidMount` for side effects like DOM manipulation or setting state from async sources. Use `useEffect` in functional components.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          componentDidMount() {
+            $BODY
+          }
+    fix: |
+      For functional components, use the `useEffect` hook to manage side effects properly. Example:
+      
+      ```javascript
+      useEffect(() => {
+        // Side effect code here
+      }, []);
+      ```
+    metadata:
+      cwe: CWE-763
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-unsafe-use-of-unmount
+    languages: [javascript, typescript]
+    message: |
+      Ensure that cleanup logic is handled properly in `componentWillUnmount` to prevent memory leaks or unintended behavior.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          componentWillUnmount() {
+            $BODY
+          }
+    fix: |
+      Always include proper cleanup logic in `componentWillUnmount` to prevent memory leaks. Example:
+      
+      ```javascript
+      useEffect(() => {
+        return () => {
+          // Cleanup logic here
+        };
+      }, []);
+      ```
+    metadata:
+      cwe: CWE-401
+      owasp: A4: Insecure Design
