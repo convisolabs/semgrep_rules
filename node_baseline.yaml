@@ -1,0 +1,144 @@
+# ==========================================================
+# Semgrep Ruleset for Node.js Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Node.js applications, including SQL Injection, Insecure 
+#              File Operations, Insecure HTTP Requests, and Hardcoded Secrets.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.query("SELECT * FROM users WHERE username = '" + $USER_INPUT + "'")
+    fix: |
+      Use parameterized queries to avoid SQL Injection. Example:
+      
+      ```javascript
+      db.query("SELECT * FROM users WHERE username = ?", [userInput])
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-insecure-file-operations-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Insecure file operation detected. Avoid using unsanitized user input in file paths, which can lead to path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          fs.readFile($USER_INPUT, $CALLBACK)
+      - pattern: |
+          fs.writeFile($USER_INPUT, $DATA, $CALLBACK)
+    fix: |
+      Use `path.join` or `path.resolve` to sanitize file paths before performing file operations. Example:
+      
+      ```javascript
+      const safePath = path.join(__dirname, sanitize(userInput));
+      fs.readFile(safePath, callback);
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-http-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Insecure HTTP request detected. Avoid making HTTP requests without proper SSL/TLS validation.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          http.get($URL)
+    fix: |
+      Use `https` module instead of `http` for secure communication. Example:
+      
+      ```javascript
+      https.get($URL);
+      ```
+    metadata:
+      cwe: CWE-295
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-hardcoded-secrets-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Hardcoded secrets detected. Avoid storing sensitive information like API keys or passwords directly in the source code.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          const password = "$PASSWORD"
+      - pattern: |
+          const apiKey = "$API_KEY"
+    fix: |
+      Use environment variables or secret management tools to store sensitive data. Example:
+      
+      ```javascript
+      const password = process.env.PASSWORD;
+      ```
+    metadata:
+      cwe: CWE-798
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-insecure-jwt-signing-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Insecure JWT signing detected. Avoid using weak signing algorithms such as `none` or `HS256` without proper key management.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          jwt.sign($PAYLOAD, $SECRET, { algorithm: 'HS256' })
+      - pattern-not: |
+          jwt.sign($PAYLOAD, $SECRET, { algorithm: 'RS256' })
+    fix: |
+      Use stronger algorithms like `RS256` for signing JWTs and ensure key management practices are in place. Example:
+      
+      ```javascript
+      jwt.sign($PAYLOAD, $SECRET, { algorithm: 'RS256' });
+      ```
+    metadata:
+      cwe: CWE-347
+      owasp: A2: Broken Authentication
+
+  - id: detect-unsafe-use-of-eval-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Unsafe use of `eval` detected. Avoid using `eval` with user-controlled input as it can lead to code injection.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          eval($USER_INPUT)
+    fix: |
+      Avoid using `eval` or use safer alternatives such as `JSON.parse()` for processing user input. Example:
+      
+      ```javascript
+      const safeData = JSON.parse($USER_INPUT);
+      ```
+    metadata:
+      cwe: CWE-94
+      owasp: A1: Injection
+
+  - id: detect-unsafe-csrf-protection-nodejs
+    languages: [javascript, typescript]
+    message: |
+      Missing or incorrect CSRF protection in Node.js application. Ensure CSRF tokens are implemented and verified for state-changing requests.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          app.post($ENDPOINT, $MIDDLEWARE)
+      - pattern-not: |
+          csrf({ cookie: true })
+    fix: |
+      Implement CSRF protection using middleware such as `csurf`. Example:
+      
+      ```javascript
+      const csrf = require('csurf');
+      app.use(csrf({ cookie: true }));
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: Cross-Site Request Forgery (CSRF)
