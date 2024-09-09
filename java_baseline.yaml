@@ -2,9 +2,9 @@
 # Semgrep Ruleset for Java Security
 # Created by: Conviso
 # Description: This ruleset is designed to detect common
-#              vulnerabilities in Java code, including SQL Injection,
+#              vulnerabilities in Java applications, including SQL Injection,
 #              XSS, Command Injection, Path Traversal, Insecure Deserialization,
-#              Weak Cryptography, and more. Suggested fixes included.
+#              and more. Includes support for frameworks like Spring and Hibernate.
 # ==========================================================
 
 rules:
@@ -12,15 +12,34 @@ rules:
     languages: [java]
     message: |
       Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
-      Suggested Fix: Use prepared statements (e.g., PreparedStatement) to prevent SQL Injection.
     severity: ERROR
     patterns:
+      # Generic pattern for SQL injection across JDBC, Spring JDBC, and Hibernate
       - pattern: |
           Statement stmt = connection.createStatement();
-          stmt.executeQuery("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'")
+          stmt.executeQuery("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'");
+      - pattern: |
+          session.createQuery("FROM User WHERE name = '" + $USER_INPUT + "'");
+      - pattern: |
+          jdbcTemplate.queryForObject("SELECT * FROM users WHERE name = '" + $USER_INPUT + "'");
       - pattern-not: |
           PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM users WHERE name = ?");
           pstmt.setString(1, $USER_INPUT);
+    fix: |
+      Use parameterized queries or ORM methods to avoid SQL Injection. For example:
+      
+      ```java
+      // Using PreparedStatement in JDBC
+      PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM users WHERE name = ?");
+      pstmt.setString(1, $USER_INPUT);
+      
+      // Using Hibernate Query
+      session.createQuery("FROM User WHERE name = :name")
+             .setParameter("name", $USER_INPUT);
+      
+      // Using Spring JDBC Template
+      jdbcTemplate.queryForObject("SELECT * FROM users WHERE name = ?", new Object[]{ $USER_INPUT });
+      ```
     metadata:
       cwe: CWE-89
       owasp: A1: Injection
@@ -28,14 +47,20 @@ rules:
   - id: detect-xss
     languages: [java]
     message: |
-      Possible Cross-Site Scripting (XSS) vulnerability. Avoid inserting unsanitized user input into the HTML output stream.
-      Suggested Fix: Use a library like OWASP Java Encoder to encode user input before outputting to the browser.
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid outputting unsanitized user input in web responses.
     severity: ERROR
     patterns:
       - pattern: |
-          out.println($USER_INPUT)
+          out.println($USER_INPUT);
       - pattern-not: |
-          out.println(Encode.forHtml($USER_INPUT))
+          out.println(HtmlUtils.htmlEscape($USER_INPUT));
+    fix: |
+      Use escaping methods to sanitize user input before output, such as `HtmlUtils.htmlEscape()` in Spring.
+      Example:
+      
+      ```java
+      out.println(HtmlUtils.htmlEscape($USER_INPUT));
+      ```
     metadata:
       cwe: CWE-79
       owasp: A7: Cross-Site Scripting (XSS)
@@ -44,13 +69,18 @@ rules:
     languages: [java]
     message: |
       Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
-      Suggested Fix: Use a whitelist for acceptable commands or sanitize user input.
     severity: ERROR
     patterns:
       - pattern: |
-          Runtime.getRuntime().exec($CMD + " " + $USER_INPUT)
+          Runtime.getRuntime().exec("cmd " + $USER_INPUT);
       - pattern-not: |
-          Runtime.getRuntime().exec($CMD + " " + sanitize($USER_INPUT))
+          Runtime.getRuntime().exec(new String[]{"cmd", $USER_INPUT});
+    fix: |
+      Use arrays for passing command arguments or sanitize user input. For example:
+      
+      ```java
+      Runtime.getRuntime().exec(new String[]{"cmd", $USER_INPUT});
+      ```
     metadata:
       cwe: CWE-78
       owasp: A1: Injection
@@ -59,17 +89,20 @@ rules:
     languages: [java]
     message: |
       Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
-      Suggested Fix: Use File.getCanonicalPath() or sanitize file paths to prevent unauthorized file access.
     severity: ERROR
     patterns:
       - pattern: |
-          new FileInputStream($USER_INPUT)
-      - pattern: |
-          new FileOutputStream($USER_INPUT)
+          new FileInputStream($USER_INPUT);
       - pattern-not: |
-          new FileInputStream(new File($USER_INPUT).getCanonicalPath())
-      - pattern-not: |
-          new FileOutputStream(new File($USER_INPUT).getCanonicalPath())
+          new FileInputStream(new File($USER_INPUT).getCanonicalPath());
+    fix: |
+      Use `getCanonicalPath()` to sanitize and validate the file path. Example:
+      
+      ```java
+      File file = new File($USER_INPUT);
+      String canonicalPath = file.getCanonicalPath();
+      FileInputStream fis = new FileInputStream(canonicalPath);
+      ```
     metadata:
       cwe: CWE-22
       owasp: A5: Broken Access Control
@@ -78,14 +111,18 @@ rules:
     languages: [java]
     message: |
       Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
-      Suggested Fix: Use safe serialization formats like JSON and validate inputs before deserializing.
     severity: ERROR
     patterns:
       - pattern: |
-          ObjectInputStream in = new ObjectInputStream(new FileInputStream($USER_INPUT));
-          Object obj = in.readObject();
-      - pattern-not: |
-          // Add validation checks before deserialization
+          ObjectInputStream ois = new ObjectInputStream(new FileInputStream($USER_INPUT));
+          Object obj = ois.readObject();
+    fix: |
+      Avoid using `ObjectInputStream` with untrusted data or validate the data beforehand. Prefer safer alternatives like JSON or custom serialization:
+      
+      ```java
+      ObjectMapper mapper = new ObjectMapper();
+      MyObject obj = mapper.readValue($USER_INPUT, MyObject.class);
+      ```
     metadata:
       cwe: CWE-502
       owasp: A8: Insecure Deserialization
@@ -93,35 +130,40 @@ rules:
   - id: detect-sensitive-data-exposure
     languages: [java]
     message: |
-      Sensitive data exposure. Avoid logging sensitive information.
-      Suggested Fix: Mask sensitive data (e.g., passwords, credit card numbers) before logging.
+      Sensitive data exposure. Avoid logging sensitive information such as passwords or credit card numbers.
     severity: WARNING
     patterns:
       - pattern: |
-          System.out.println($SENSITIVE_DATA)
+          System.out.println($SENSITIVE_DATA);
       - pattern: |
-          logger.debug($SENSITIVE_DATA)
-      - pattern-not: |
-          System.out.println(maskSensitiveData($SENSITIVE_DATA))
-      - pattern-not: |
-          logger.debug(maskSensitiveData($SENSITIVE_DATA))
+          logger.debug($SENSITIVE_DATA);
+    fix: |
+      Mask sensitive data before logging or output. For example:
+      
+      ```java
+      System.out.println(maskSensitiveData($SENSITIVE_DATA));
+      ```
     metadata:
       cwe: CWE-200
       owasp: A3: Sensitive Data Exposure
 
-  - id: detect-weak-cryptography
+  - id: detect-weak-encryption
     languages: [java]
     message: |
-      Weak or deprecated cryptography algorithm detected. Using outdated cryptography can compromise security.
-      Suggested Fix: Use strong algorithms like AES with a proper key size (e.g., AES-256).
+      Weak encryption algorithm detected. Avoid using deprecated cryptographic algorithms such as DES.
     severity: ERROR
     patterns:
       - pattern: |
-          Cipher.getInstance("DES")
-      - pattern: |
-          Cipher.getInstance("RC4")
+          Cipher.getInstance("DES");
       - pattern-not: |
-          Cipher.getInstance("AES")
+          Cipher.getInstance("AES");
+    fix: |
+      Use stronger encryption algorithms such as AES with appropriate key sizes. Example:
+      
+      ```java
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+      ```
     metadata:
       cwe: CWE-327
       owasp: A6: Security Misconfiguration
+
