@@ -1,0 +1,86 @@
+# ==========================================================
+# Semgrep Ruleset for Express.js Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in Express.js applications, including SQL Injection, XSS, 
+#              CSRF, and Insecure File Operations.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-express
+    languages: [javascript, typescript]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          db.query("SELECT * FROM users WHERE id = '" + req.params.id + "'")
+    fix: |
+      Use parameterized queries to avoid SQL Injection. Example:
+      
+      ```javascript
+      db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-xss-express
+    languages: [javascript, typescript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid using unsanitized user input in responses.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          res.send(`<div>${req.body.username}</div>`)
+    fix: |
+      Use sanitization libraries or escape the input before rendering in the response. Example:
+      
+      ```javascript
+      const sanitizedInput = sanitize(req.body.username);
+      res.send(`<div>${sanitizedInput}</div>`);
+      ```
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-insecure-file-operations-express
+    languages: [javascript, typescript]
+    message: |
+      Insecure file operation detected. Avoid using unsanitized user input in file paths to prevent path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          res.sendFile(req.query.file)
+    fix: |
+      Sanitize file paths or use safe libraries to handle file operations. Example:
+      
+      ```javascript
+      const safePath = path.join(__dirname, 'public', path.normalize(req.query.file));
+      res.sendFile(safePath);
+      ```
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-csrf-express
+    languages: [javascript, typescript]
+    message: |
+      Missing CSRF protection in Express.js application. Ensure CSRF tokens are implemented for all state-changing requests.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          app.post($ENDPOINT, $MIDDLEWARE)
+      - pattern-not: |
+          csrf({ cookie: true })
+    fix: |
+      Use the `csurf` middleware to add CSRF protection to your Express app. Example:
+      
+      ```javascript
+      const csrf = require('csurf');
+      const csrfProtection = csrf({ cookie: true });
+      app.use(csrfProtection);
+      ```
+    metadata:
+      cwe: CWE-352
+      owasp: A8: Cross-Site Request Forgery (CSRF)
