@@ -1,0 +1,50 @@
+# ==========================================================
+# Semgrep Ruleset for JavaScript Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in JavaScript code, including
+#              XSS, SQL Injection, Path Traversal, and more.
+# ==========================================================
+
+rules:
+  - id: detect-xss
+    languages: [javascript]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid inserting unsanitized user input into the DOM.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          document.innerHTML = $USER_INPUT
+      - pattern-not: |
+          document.innerHTML = sanitize($USER_INPUT)
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-sql-injection
+    languages: [javascript]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          connection.query(`SELECT * FROM users WHERE username = '${$USER_INPUT}'`)
+      - pattern-not: |
+          connection.query(`SELECT * FROM users WHERE username = ?`, [$USER_INPUT])
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-path-traversal
+    languages: [javascript]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          fs.readFileSync($USER_INPUT)
+      - pattern-not: |
+          fs.readFileSync(path.resolve($USER_INPUT))
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
