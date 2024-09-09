@@ -1,0 +1,126 @@
+# ==========================================================
+# Semgrep Ruleset for Python Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common
+#              vulnerabilities in Python applications, including
+#              SQL Injection, XSS, Command Injection, Insecure Deserialization,
+#              and more. Suggested fixes included.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection
+    languages: [python]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+      Suggested Fix: Use parameterized queries (e.g., with placeholders) or an ORM like SQLAlchemy.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          cursor.execute("SELECT * FROM $TABLE WHERE $COLUMN = '" + $USER_INPUT + "'")
+      - pattern: |
+          cursor.execute("INSERT INTO $TABLE ... VALUES ('" + $USER_INPUT + "' ... )")
+      - pattern: |
+          cursor.execute("UPDATE $TABLE SET $COLUMN = '" + $USER_INPUT + "' WHERE ...")
+      - pattern: |
+          cursor.execute("DELETE FROM $TABLE WHERE $COLUMN = '" + $USER_INPUT + "'")
+      - pattern-not: |
+          cursor.execute("SELECT * FROM $TABLE WHERE $COLUMN = %s", ($USER_INPUT,))
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-xss
+    languages: [python]
+    message: |
+      Possible Cross-Site Scripting (XSS) vulnerability. Avoid outputting unsanitized user input in templates or responses.
+      Suggested Fix: Use escape functions or libraries to sanitize user input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return $USER_INPUT
+      - pattern-not: |
+          return escape($USER_INPUT)
+    metadata:
+      cwe: CWE-79
+      owasp: A7: Cross-Site Scripting (XSS)
+
+  - id: detect-command-injection
+    languages: [python]
+    message: |
+      Possible Command Injection vulnerability. Avoid using unsanitized user input in system commands.
+      Suggested Fix: Use subprocess.run() with an argument list, rather than concatenating strings.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          os.system("cmd " + $USER_INPUT)
+      - pattern: |
+          subprocess.run("cmd " + $USER_INPUT, shell=True)
+      - pattern-not: |
+          subprocess.run(["cmd", $USER_INPUT])
+    metadata:
+      cwe: CWE-78
+      owasp: A1: Injection
+
+  - id: detect-path-traversal
+    languages: [python]
+    message: |
+      Possible Path Traversal vulnerability. Avoid using unsanitized user input in file paths.
+      Suggested Fix: Use `os.path.abspath()` or sanitize input paths to avoid path traversal attacks.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          open($USER_INPUT)
+      - pattern: |
+          os.remove($USER_INPUT)
+      - pattern-not: |
+          open(os.path.abspath($USER_INPUT))
+    metadata:
+      cwe: CWE-22
+      owasp: A5: Broken Access Control
+
+  - id: detect-insecure-deserialization
+    languages: [python]
+    message: |
+      Possible insecure deserialization of untrusted data. Avoid deserializing user-controlled input directly.
+      Suggested Fix: Use safe deserialization formats like JSON and validate the data before processing.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          pickle.loads($USER_INPUT)
+    metadata:
+      cwe: CWE-502
+      owasp: A8: Insecure Deserialization
+
+  - id: detect-sensitive-data-exposure
+    languages: [python]
+    message: |
+      Sensitive data exposure. Avoid logging sensitive information such as passwords or credit card numbers.
+      Suggested Fix: Mask sensitive data before logging.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          print($SENSITIVE_DATA)
+      - pattern: |
+          logger.debug($SENSITIVE_DATA)
+      - pattern-not: |
+          print(mask_sensitive_data($SENSITIVE_DATA))
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-weak-encryption
+    languages: [python]
+    message: |
+      Weak encryption algorithm detected. Avoid using deprecated cryptographic algorithms such as DES.
+      Suggested Fix: Use stronger algorithms like AES with proper key sizes (e.g., AES-256).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          DES.new($KEY)
+      - pattern: |
+          ARC4.new($KEY)
+      - pattern-not: |
+          AES.new($KEY)
+    metadata:
+      cwe: CWE-327
+      owasp: A6: Security Misconfiguration
