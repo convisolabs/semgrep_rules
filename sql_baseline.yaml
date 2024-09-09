@@ -1,0 +1,103 @@
+# ==========================================================
+# Semgrep Ruleset for SQL Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in SQL queries, including SQL Injection, exposure of sensitive
+#              data, and unsafe use of SQL functions.
+# ==========================================================
+
+rules:
+  - id: detect-sql-injection-sql
+    languages: [sql]
+    message: |
+      Possible SQL Injection vulnerability. Avoid using unsanitized user input in SQL queries.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          SELECT * FROM $TABLE WHERE $COLUMN = '$USER_INPUT'
+    fix: |
+      Use parameterized queries to avoid SQL Injection. Example:
+      
+      ```sql
+      PREPARE stmt FROM 'SELECT * FROM $TABLE WHERE $COLUMN = ?';
+      EXECUTE stmt USING $USER_INPUT;
+      ```
+    metadata:
+      cwe: CWE-89
+      owasp: A1: Injection
+
+  - id: detect-unsafe-transactions
+    languages: [sql]
+    message: |
+      Incomplete transaction detected. Ensure proper rollback or commit for all operations.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          BEGIN TRANSACTION;
+          $QUERY;
+          -- No COMMIT or ROLLBACK
+    fix: |
+      Always include `COMMIT` or `ROLLBACK` at the end of transactions. Example:
+      
+      ```sql
+      BEGIN TRANSACTION;
+      $QUERY;
+      COMMIT;
+      ```
+    metadata:
+      cwe: CWE-415
+      owasp: A4: Insecure Design
+
+  - id: detect-exposure-of-sensitive-data-sql
+    languages: [sql]
+    message: |
+      Possible exposure of sensitive data. Ensure only authorized users can access sensitive columns.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          SELECT * FROM $TABLE WHERE $COLUMN = '$SENSITIVE_DATA'
+    fix: |
+      Limit access to sensitive data by using role-based permissions. Example:
+      
+      ```sql
+      GRANT SELECT ON $TABLE($NON_SENSITIVE_COLUMN) TO 'authorized_role';
+      ```
+    metadata:
+      cwe: CWE-200
+      owasp: A3: Sensitive Data Exposure
+
+  - id: detect-unsafe-use-of-load-file
+    languages: [sql]
+    message: |
+      Unsafe use of `LOAD_FILE` detected. This function can expose sensitive system files.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          SELECT LOAD_FILE($FILE_PATH)
+    fix: |
+      Avoid using `LOAD_FILE` to read files, or restrict its usage to authorized users. Example:
+      
+      ```sql
+      -- Use database views or restricted access to control file access
+      ```
+    metadata:
+      cwe: CWE-276
+      owasp: A6: Security Misconfiguration
+
+  - id: detect-over-permissive-grants
+    languages: [sql]
+    message: |
+      Over-permissive GRANT detected. Avoid granting excessive privileges to database users.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          GRANT ALL PRIVILEGES ON $DATABASE TO '$USER'
+    fix: |
+      Use role-based access control and limit privileges to necessary operations. Example:
+      
+      ```sql
+      GRANT SELECT, INSERT ON $DATABASE TO '$USER';
+      ```
+    metadata:
+      cwe: CWE-732
+      owasp: A6: Security Misconfiguration
