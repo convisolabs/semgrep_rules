@@ -25,7 +25,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-shared-preferences-kotlin
     languages: [kotlin]
@@ -50,7 +50,7 @@ rules:
       ```
     metadata:
       cwe: CWE-922
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-intent-kotlin
     languages: [kotlin]
@@ -72,7 +72,7 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-xss-kotlin
     languages: [kotlin]
@@ -92,7 +92,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-unsafe-use-of-webview-kotlin
     languages: [kotlin]
@@ -110,4 +110,4 @@ rules:
       ```
     metadata:
       cwe: CWE-937
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
