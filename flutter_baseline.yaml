@@ -24,7 +24,7 @@ rules:
       ```
     metadata:
       cwe: CWE-922
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-http-flutter
     languages: [dart]
@@ -43,7 +43,7 @@ rules:
       ```
     metadata:
       cwe: CWE-295
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-http-post-flutter
     languages: [dart]
@@ -62,7 +62,7 @@ rules:
       ```
     metadata:
       cwe: CWE-295
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-webview-flutter
     languages: [dart]
@@ -86,7 +86,7 @@ rules:
       ```
     metadata:
       cwe: CWE-937
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-hardcoded-credentials-flutter
     languages: [dart]
@@ -104,7 +104,7 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-use-of-clipboard-flutter
     languages: [dart]
@@ -122,7 +122,7 @@ rules:
       ```
     metadata:
       cwe: CWE-532
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-use-of-intent-flutter
     languages: [dart]
@@ -141,4 +141,4 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
