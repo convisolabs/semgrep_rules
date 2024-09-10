@@ -23,7 +23,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-file-operations-nodejs
     languages: [javascript, typescript]
@@ -44,7 +44,7 @@ rules:
       ```
     metadata:
       cwe: CWE-22
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-insecure-http-nodejs
     languages: [javascript, typescript]
@@ -62,7 +62,7 @@ rules:
       ```
     metadata:
       cwe: CWE-295
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-hardcoded-secrets-nodejs
     languages: [javascript, typescript]
@@ -82,7 +82,7 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-jwt-signing-nodejs
     languages: [javascript, typescript]
@@ -102,7 +102,7 @@ rules:
       ```
     metadata:
       cwe: CWE-347
-      owasp: A2: Broken Authentication
+      owasp: A2 Broken Authentication
 
   - id: detect-unsafe-use-of-eval-nodejs
     languages: [javascript, typescript]
@@ -120,7 +120,7 @@ rules:
       ```
     metadata:
       cwe: CWE-94
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-unsafe-csrf-protection-nodejs
     languages: [javascript, typescript]
@@ -141,4 +141,4 @@ rules:
       ```
     metadata:
       cwe: CWE-352
-      owasp: A8: Cross-Site Request Forgery (CSRF)
+      owasp: A8 Cross-Site Request Forgery (CSRF)
