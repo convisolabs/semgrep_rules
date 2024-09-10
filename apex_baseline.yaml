@@ -26,7 +26,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-dml-apex
     languages: [apex]
@@ -49,7 +49,7 @@ rules:
       ```
     metadata:
       cwe: CWE-284
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-insecure-apex-class-visibility
     languages: [apex]
@@ -69,7 +69,7 @@ rules:
       ```
     metadata:
       cwe: CWE-281
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-insecure-apex-webservice-method
     languages: [apex]
@@ -89,7 +89,7 @@ rules:
       ```
     metadata:
       cwe: CWE-732
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-insecure-apex-soap-callout
     languages: [apex]
@@ -114,7 +114,7 @@ rules:
       ```
     metadata:
       cwe: CWE-300
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-hardcoded-credentials-apex
     languages: [apex]
@@ -132,4 +132,4 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
