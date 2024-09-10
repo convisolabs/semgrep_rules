@@ -25,7 +25,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-unsafe-href-javascript
     languages: [html]
@@ -43,7 +43,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-open-redirect-html
     languages: [html]
@@ -63,7 +63,7 @@ rules:
       ```
     metadata:
       cwe: CWE-601
-      owasp: A10: Unvalidated Redirects and Forwards
+      owasp: A10 Unvalidated Redirects and Forwards
 
   - id: detect-unsafe-target-blank
     languages: [html]
@@ -81,7 +81,7 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-exposed-hidden-inputs
     languages: [html]
@@ -99,7 +99,7 @@ rules:
       ```
     metadata:
       cwe: CWE-201
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-autocomplete
     languages: [html]
@@ -117,4 +117,4 @@ rules:
       ```
     metadata:
       cwe: CWE-522
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
