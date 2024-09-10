@@ -24,7 +24,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-unsafe-transactions
     languages: [sql]
@@ -46,7 +46,7 @@ rules:
       ```
     metadata:
       cwe: CWE-415
-      owasp: A4: Insecure Design
+      owasp: A4 Insecure Design
 
   - id: detect-exposure-of-sensitive-data-sql
     languages: [sql]
@@ -64,7 +64,7 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-use-of-load-file
     languages: [sql]
@@ -82,7 +82,7 @@ rules:
       ```
     metadata:
       cwe: CWE-276
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-over-permissive-grants
     languages: [sql]
@@ -100,4 +100,4 @@ rules:
       ```
     metadata:
       cwe: CWE-732
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
