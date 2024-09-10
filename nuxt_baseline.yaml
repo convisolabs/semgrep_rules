@@ -26,7 +26,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-xss-v-html-nuxt
     languages: [javascript, typescript]
@@ -44,7 +44,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-insecure-api-routes-nuxt
     languages: [javascript, typescript]
@@ -67,7 +67,7 @@ rules:
       ```
     metadata:
       cwe: CWE-284
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-exposure-of-sensitive-env-vars-nuxt
     languages: [javascript, typescript]
@@ -89,7 +89,7 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-file-handling-nuxt
     languages: [javascript, typescript]
@@ -109,7 +109,7 @@ rules:
       ```
     metadata:
       cwe: CWE-22
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-missing-csrf-protection-nuxt
     languages: [javascript, typescript]
@@ -135,4 +135,4 @@ rules:
       ```
     metadata:
       cwe: CWE-352
-      owasp: A8: Cross-Site Request Forgery (CSRF)
+      owasp: A8 Cross-Site Request Forgery (CSRF)
