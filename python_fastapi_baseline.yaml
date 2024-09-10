@@ -27,7 +27,7 @@ rules:
       ```
     metadata:
       cwe: CWE-20
-      owasp: A3: Injection
+      owasp: A3 Injection
 
   - id: detect-fastapi-missing-data-validation
     languages: [python]
@@ -52,4 +52,4 @@ rules:
       ```
     metadata:
       cwe: CWE-20
-      owasp: A3: Injection
+      owasp: A3 Injection
