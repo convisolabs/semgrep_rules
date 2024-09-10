@@ -1,0 +1,170 @@
+# ==========================================================
+# Semgrep Ruleset for TypeScript Security
+# Created by: Conviso
+# Description: This ruleset is designed to detect common vulnerabilities
+#              in TypeScript applications, including Any Type misuse,
+#              Null/Undefined handling, Command Injection, and
+#              Unsafe Use of External Libraries.
+# ==========================================================
+
+rules:
+  - id: detect-any-type
+    languages: [typescript]
+    message: |
+      Usage of `any` type detected. Avoid using `any` as it bypasses TypeScript's static type checking, leading to potential vulnerabilities.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          let $VAR: any;
+      - pattern: |
+          const $VAR: any;
+    metadata:
+      cwe: CWE-1194
+      owasp: A7:2017
+    fix: |
+      Replace `any` with a more specific type to benefit from TypeScript’s type checking. Example:
+      
+      ```typescript
+      let $VAR: string;
+      ```
+
+  - id: detect-missing-null-undefined-check
+    languages: [typescript]
+    message: |
+      Potential null or undefined value detected. Ensure that you check for null or undefined values before proceeding.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $VAR.$PROPERTY
+      - pattern-not: |
+          if ($VAR != null && $VAR != undefined) {
+            $VAR.$PROPERTY;
+          }
+    metadata:
+      cwe: CWE-476
+      owasp: A1:2017
+    fix: |
+      Ensure that the variable is properly checked for null or undefined values. Example:
+      
+      ```typescript
+      if ($VAR != null && $VAR != undefined) {
+        $VAR.$PROPERTY;
+      }
+      ```
+
+  - id: detect-unsafe-command-execution
+    languages: [typescript]
+    message: |
+      Potential Command Injection detected. Avoid using `child_process.exec` or `child_process.execSync` with untrusted input.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          child_process.exec($CMD);
+      - pattern: |
+          child_process.execSync($CMD);
+    metadata:
+      cwe: CWE-78
+      owasp: A1:2017
+    fix: |
+      Sanitize inputs or avoid passing untrusted input to command execution functions. Example:
+      
+      ```typescript
+      const safeCommand = sanitize($CMD);
+      child_process.exec(safeCommand);
+      ```
+
+  - id: detect-unsafe-dynamic-import
+    languages: [typescript]
+    message: |
+      Dynamic import with untrusted input detected. Avoid using untrusted values in `import()` to prevent loading malicious modules.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          import($MODULE);
+    metadata:
+      cwe: CWE-94
+      owasp: A8:2017
+    fix: |
+      Ensure that the module being imported is safe and validated. Example:
+      
+      ```typescript
+      if (isTrustedModule($MODULE)) {
+        import($MODULE);
+      }
+      ```
+
+  - id: detect-unsafe-optional-chaining
+    languages: [typescript]
+    message: |
+      Usage of optional chaining without null/undefined check detected. Ensure that you are aware of potential null/undefined values when using optional chaining.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $VAR?.$PROPERTY
+    metadata:
+      cwe: CWE-476
+      owasp: A1:2017
+    fix: |
+      Ensure you have handled cases where the value may be null or undefined. Example:
+      
+      ```typescript
+      if ($VAR != null) {
+        $VAR?.$PROPERTY;
+      }
+      ```
+
+  - id: detect-unsafe-type-assertions
+    languages: [typescript]
+    message: |
+      Unsafe type assertion detected. Avoid using `as` type assertions unless you are certain of the type being asserted.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $VAR as $TYPE;
+    metadata:
+      cwe: CWE-843
+    fix: |
+      Use safer type narrowing techniques, such as `typeof` or `instanceof`, to ensure type safety. Example:
+      
+      ```typescript
+      if (typeof $VAR === 'string') {
+        let safeVar = $VAR as string;
+      }
+      ```
+
+  - id: detect-unsafe-external-library-use
+    languages: [typescript]
+    message: |
+      Potential unsafe use of an external library detected. Ensure that the library or its types are validated and do not lead to vulnerabilities.
+    severity: WARNING
+    patterns:
+      - pattern: |
+          $LIBRARY($ARGUMENTS);
+    metadata:
+      cwe: CWE-20
+      owasp: A6:2017
+    fix: |
+      Validate inputs and outputs from external libraries to ensure they match your expected types and security constraints. Example:
+      
+      ```typescript
+      const result = $LIBRARY(sanitize($ARGUMENTS));
+      ```
+
+  - id: detect-unsafe-jwt-algorithms
+    languages: [typescript]
+    message: |
+      Insecure algorithm detected in JWT signing. Avoid using weak algorithms such as `none`, `HS256`, or `RS256` without validation.
+    severity: ERROR
+    patterns:
+      - pattern: |
+          jwt.sign($PAYLOAD, $SECRET, { algorithm: $ALGORITHM });
+    metadata:
+      cwe: CWE-327
+      owasp: A3:2017
+    fix: |
+      Use secure algorithms like `RS512` and ensure that the algorithm is explicitly defined and validated. Example:
+      
+      ```typescript
+      jwt.sign($PAYLOAD, $SECRET, { algorithm: 'RS512' });
+      ```
+
