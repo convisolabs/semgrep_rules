@@ -28,7 +28,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-insecure-eval-javascript
     languages: [javascript]
@@ -46,7 +46,7 @@ rules:
       ```
     metadata:
       cwe: CWE-94
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-dom-manipulation
     languages: [javascript]
@@ -67,7 +67,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-local-storage-misuse
     languages: [javascript]
@@ -86,7 +86,7 @@ rules:
       ```
     metadata:
       cwe: CWE-922
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-use-of-innerhtml
     languages: [javascript]
@@ -104,7 +104,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-insecure-cookie-usage
     languages: [javascript]
@@ -122,5 +122,5 @@ rules:
       ```
     metadata:
       cwe: CWE-1004
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
