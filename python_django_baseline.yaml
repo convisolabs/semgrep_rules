@@ -23,7 +23,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-django-csrf-disabled
     languages: [python]
@@ -41,7 +41,7 @@ rules:
       ```
     metadata:
       cwe: CWE-352
-      owasp: A8: CSRF
+      owasp: A8 CSRF
 
   - id: detect-django-debug-true
     languages: [python]
@@ -59,4 +59,4 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
