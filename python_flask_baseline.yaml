@@ -27,7 +27,7 @@ rules:
       ```
     metadata:
       cwe: CWE-352
-      owasp: A8: CSRF
+      owasp: A8 CSRF
 
   - id: detect-sqlalchemy-sql-injection
     languages: [python]
@@ -45,4 +45,4 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
