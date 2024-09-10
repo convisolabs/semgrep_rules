@@ -25,7 +25,7 @@ rules:
       ```
     metadata:
       cwe: CWE-917
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-csrf-disabled
     languages: [java]
@@ -43,7 +43,7 @@ rules:
       ```
     metadata:
       cwe: CWE-352
-      owasp: A8: CSRF
+      owasp: A8 CSRF
 
   - id: detect-open-redirect
     languages: [java]
@@ -63,7 +63,7 @@ rules:
       ```
     metadata:
       cwe: CWE-601
-      owasp: A10: Unvalidated Redirects and Forwards
+      owasp: A10 Unvalidated Redirects and Forwards
 
   - id: detect-insecure-request-param
     languages: [java]
@@ -81,7 +81,7 @@ rules:
       ```
     metadata:
       cwe: CWE-20
-      owasp: A3: Injection
+      owasp: A3 Injection
 
   - id: detect-actuator-exposure
     languages: [yaml]
@@ -107,4 +107,4 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
