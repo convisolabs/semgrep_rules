@@ -24,7 +24,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-insecure-eval-react
     languages: [javascript, typescript]
@@ -42,7 +42,7 @@ rules:
       ```
     metadata:
       cwe: CWE-94
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-dom-manipulation-react
     languages: [javascript, typescript]
@@ -61,7 +61,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-unsafe-local-storage-react
     languages: [javascript, typescript]
@@ -79,7 +79,7 @@ rules:
       ```
     metadata:
       cwe: CWE-922
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-component-did-mount
     languages: [javascript, typescript]
@@ -101,7 +101,7 @@ rules:
       ```
     metadata:
       cwe: CWE-763
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-unsafe-use-of-unmount
     languages: [javascript, typescript]
@@ -125,4 +125,4 @@ rules:
       ```
     metadata:
       cwe: CWE-401
-      owasp: A4: Insecure Design
+      owasp: A4 Insecure Design
