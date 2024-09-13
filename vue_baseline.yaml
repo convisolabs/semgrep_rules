@@ -24,7 +24,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-insecure-eval-vue
     languages: [javascript, typescript]
@@ -42,7 +42,7 @@ rules:
       ```
     metadata:
       cwe: CWE-94
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-dom-manipulation-vue
     languages: [javascript, typescript]
@@ -60,7 +60,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-unsafe-local-storage-vue
     languages: [javascript, typescript]
@@ -78,7 +78,7 @@ rules:
       ```
     metadata:
       cwe: CWE-922
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-vue-v-bind-vulnerability
     languages: [javascript, typescript]
@@ -96,7 +96,7 @@ rules:
       ```
     metadata:
       cwe: CWE-79
-      owasp: A7: Cross-Site Scripting (XSS)
+      owasp: A7 Cross-Site Scripting (XSS)
 
   - id: detect-unsafe-use-of-vue-directives
     languages: [javascript, typescript]
@@ -114,4 +114,4 @@ rules:
       ```
     metadata:
       cwe: CWE-94
-      owasp: A1: Injection
+      owasp: A1 Injection
