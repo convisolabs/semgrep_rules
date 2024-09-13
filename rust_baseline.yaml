@@ -26,7 +26,7 @@ rules:
       ```
     metadata:
       cwe: CWE-22
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-hardcoded-secrets-rust
     languages: [rust]
@@ -46,7 +46,7 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-use-of-unsafe-blocks-rust
     languages: [rust]
@@ -64,7 +64,7 @@ rules:
       ```
     metadata:
       cwe: CWE-119
-      owasp: A9: Using Components with Known Vulnerabilities
+      owasp: A9 Using Components with Known Vulnerabilities
 
   - id: detect-insecure-serialization-rust
     languages: [rust]
@@ -85,7 +85,7 @@ rules:
       ```
     metadata:
       cwe: CWE-502
-      owasp: A8: Insecure Deserialization
+      owasp: A8 Insecure Deserialization
 
   - id: detect-insecure-random-number-generation-rust
     languages: [rust]
@@ -105,7 +105,7 @@ rules:
       ```
     metadata:
       cwe: CWE-330
-      owasp: A9: Using Components with Known Vulnerabilities
+      owasp: A9 Using Components with Known Vulnerabilities
 
   - id: detect-unsafe-use-of-external-libraries-rust
     languages: [rust]
@@ -123,4 +123,4 @@ rules:
       ```
     metadata:
       cwe: CWE-829
-      owasp: A9: Using Components with Known Vulnerabilities
+      owasp: A9 Using Components with Known Vulnerabilities
