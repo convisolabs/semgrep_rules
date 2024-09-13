@@ -20,7 +20,7 @@ rules:
           const $VAR: any;
     metadata:
       cwe: CWE-1194
-      owasp: A7:2017
+      owasp: A7
     fix: |
       Replace `any` with a more specific type to benefit from TypeScript’s type checking. Example:
       
@@ -42,7 +42,7 @@ rules:
           }
     metadata:
       cwe: CWE-476
-      owasp: A1:2017
+      owasp: A1
     fix: |
       Ensure that the variable is properly checked for null or undefined values. Example:
       
@@ -64,7 +64,7 @@ rules:
           child_process.execSync($CMD);
     metadata:
       cwe: CWE-78
-      owasp: A1:2017
+      owasp: A1
     fix: |
       Sanitize inputs or avoid passing untrusted input to command execution functions. Example:
       
@@ -83,7 +83,7 @@ rules:
           import($MODULE);
     metadata:
       cwe: CWE-94
-      owasp: A8:2017
+      owasp: A8
     fix: |
       Ensure that the module being imported is safe and validated. Example:
       
@@ -103,7 +103,7 @@ rules:
           $VAR?.$PROPERTY
     metadata:
       cwe: CWE-476
-      owasp: A1:2017
+      owasp: A1
     fix: |
       Ensure you have handled cases where the value may be null or undefined. Example:
       
@@ -142,7 +142,7 @@ rules:
           $LIBRARY($ARGUMENTS);
     metadata:
       cwe: CWE-20
-      owasp: A6:2017
+      owasp: A6
     fix: |
       Validate inputs and outputs from external libraries to ensure they match your expected types and security constraints. Example:
       
@@ -160,7 +160,7 @@ rules:
           jwt.sign($PAYLOAD, $SECRET, { algorithm: $ALGORITHM });
     metadata:
       cwe: CWE-327
-      owasp: A3:2017
+      owasp: A3
     fix: |
       Use secure algorithms like `RS512` and ensure that the algorithm is explicitly defined and validated. Example:
       
