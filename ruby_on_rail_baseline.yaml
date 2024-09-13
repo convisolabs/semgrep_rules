@@ -24,7 +24,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-sql-injection-sinatra
     languages: [ruby]
@@ -42,7 +42,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-sql-injection-hanami
     languages: [ruby]
@@ -60,7 +60,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-sql-injection-padrino
     languages: [ruby]
@@ -78,7 +78,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-mass-assignment-rails
     languages: [ruby]
@@ -98,7 +98,7 @@ rules:
       ```
     metadata:
       cwe: CWE-915
-      owasp: A4: Insecure Design
+      owasp: A4 Insecure Design
 
   - id: detect-command-injection-ruby
     languages: [ruby]
@@ -118,7 +118,7 @@ rules:
       ```
     metadata:
       cwe: CWE-78
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-path-traversal-ruby
     languages: [ruby]
@@ -139,7 +139,7 @@ rules:
       ```
     metadata:
       cwe: CWE-22
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-insecure-deserialization-ruby
     languages: [ruby]
@@ -157,7 +157,7 @@ rules:
       ```
     metadata:
       cwe: CWE-502
-      owasp: A8: Insecure Deserialization
+      owasp: A8 Insecure Deserialization
 
   - id: detect-sensitive-data-exposure-ruby
     languages: [ruby]
@@ -177,6 +177,6 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
 
