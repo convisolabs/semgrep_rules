@@ -27,7 +27,7 @@ rules:
       ```
     metadata:
       cwe: CWE-78
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-unsafe-file-permissions
     languages: [bash, sh]
@@ -45,7 +45,7 @@ rules:
       ```
     metadata:
       cwe: CWE-732
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-path-traversal-shell
     languages: [bash, sh]
@@ -66,7 +66,7 @@ rules:
       ```
     metadata:
       cwe: CWE-22
-      owasp: A5: Broken Access Control
+      owasp: A5 Broken Access Control
 
   - id: detect-hardcoded-credentials
     languages: [bash, sh]
@@ -86,7 +86,7 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-unsafe-use-of-eval
     languages: [bash, sh]
@@ -124,4 +124,4 @@ rules:
       ```
     metadata:
       cwe: CWE-77
-      owasp: A1: Injection
+      owasp: A1 Injection
