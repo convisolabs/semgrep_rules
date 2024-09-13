@@ -23,7 +23,7 @@ rules:
       ```
     metadata:
       cwe: CWE-89
-      owasp: A1: Injection
+      owasp: A1 Injection
 
   - id: detect-insecure-data-storage-swift
     languages: [swift]
@@ -42,7 +42,7 @@ rules:
       ```
     metadata:
       cwe: CWE-312
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-network-request-swift
     languages: [swift]
@@ -66,7 +66,7 @@ rules:
       ```
     metadata:
       cwe: CWE-295
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-hardcoded-secrets-swift
     languages: [swift]
@@ -86,7 +86,7 @@ rules:
       ```
     metadata:
       cwe: CWE-798
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-use-of-webview-swift
     languages: [swift]
@@ -105,7 +105,7 @@ rules:
       ```
     metadata:
       cwe: CWE-937
-      owasp: A6: Security Misconfiguration
+      owasp: A6 Security Misconfiguration
 
   - id: detect-insecure-use-of-clipboard-swift
     languages: [swift]
@@ -123,7 +123,7 @@ rules:
       ```
     metadata:
       cwe: CWE-532
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
 
   - id: detect-insecure-intent-swift
     languages: [swift]
@@ -142,4 +142,4 @@ rules:
       ```
     metadata:
       cwe: CWE-200
-      owasp: A3: Sensitive Data Exposure
+      owasp: A3 Sensitive Data Exposure
